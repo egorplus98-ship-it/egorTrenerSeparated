@@ -1,7 +1,7 @@
 import { state, saveLocal, syncToCloud } from '../db.js';
-import { updateProgressChart, updateMaxChart, updateFoodCharts, updateWeightChart } from './charts.js';
+import { updateProgressChart, updateMaxChart, updateFoodCharts, updateWeightChart, updateTonnageChart } from './charts.js';
 import { renderWorkoutHistory, renderFoodHistory } from './history.js';
-import { renderFoodList, renderProductManagerLists } from './nutrition.js';
+import { renderMeals, renderProductManagerLists } from './nutrition.js';
 
 let renderAllFn = null;
 export function setRenderAll(fn) { renderAllFn = fn; }
@@ -23,9 +23,9 @@ function setupTabs() {
             btn.classList.add('active');
             document.querySelectorAll('#app-page .page').forEach(function(p) { p.classList.remove('active-page'); });
             document.getElementById(btn.dataset.tab + '-page').classList.add('active-page');
-            if (btn.dataset.tab === 'stats') { updateProgressChart(); updateMaxChart(); updateFoodCharts(); }
+            if (btn.dataset.tab === 'stats') { updateProgressChart(); updateMaxChart(); updateTonnageChart(); updateFoodCharts(); }
             if (btn.dataset.tab === 'history') { renderWorkoutHistory(); renderFoodHistory(); }
-            if (btn.dataset.tab === 'food') renderFoodList();
+            if (btn.dataset.tab === 'food') renderMeals();
         });
     });
 }
@@ -38,7 +38,7 @@ function setupChartTabs() {
             var group = btn.dataset.group;
             document.getElementById('train-charts').style.display = group === 'train' ? 'block' : 'none';
             document.getElementById('food-charts').style.display = group === 'food' ? 'block' : 'none';
-            if (group === 'train') { updateProgressChart(); updateMaxChart(); }
+            if (group === 'train') { updateProgressChart(); updateMaxChart(); updateTonnageChart(); }
             else updateFoodCharts();
         });
     });
@@ -51,8 +51,18 @@ function setupChartTabs() {
             btn.classList.add('active');
             var chartType = btn.dataset.chart;
             parent.querySelectorAll('.chart-container').forEach(function(c) { c.classList.remove('active'); });
-            if (chartType === 'progress') { parent.querySelector('#progress-chart-container').classList.add('active'); setTimeout(function() { updateProgressChart(); }, 0); }
-            else if (chartType === 'max') { parent.querySelector('#max-chart-container').classList.add('active'); setTimeout(function() { updateMaxChart(); }, 0); }
+            if (chartType === 'progress') { 
+                parent.querySelector('#progress-chart-container').classList.add('active'); 
+                setTimeout(function() { updateProgressChart(); }, 0); 
+            }
+            else if (chartType === 'max') { 
+                parent.querySelector('#max-chart-container').classList.add('active'); 
+                setTimeout(function() { updateMaxChart(); }, 0); 
+            }
+            else if (chartType === 'tonnage') { 
+                parent.querySelector('#tonnage-chart-container').classList.add('active'); 
+                setTimeout(function() { updateTonnageChart(); }, 0); 
+            }
             else if (chartType === 'kcal') parent.querySelector('#kcal-chart-container').classList.add('active');
             else if (chartType === 'protein') parent.querySelector('#protein-chart-container').classList.add('active');
             else if (chartType === 'fat') parent.querySelector('#fat-chart-container').classList.add('active');
@@ -95,18 +105,19 @@ function setupModals() {
         'closeProductManagerBtn': 'productManagerModal',
         'closeEditProductModal': 'editCustomProductModal',
         'closeCaloriesModal': 'editCaloriesModal',
-        'closeProfileBtn': 'profileModal'
+        'closeProfileBtn': 'profileModal',
+        'closeTemplatesBtn': 'templatesModal',
+        'closeGoalsBtn': 'goalsModal'
     };
 
     for (var btnId in closeButtons) {
-        var modalId = closeButtons[btnId];
-        var btn = document.getElementById(btnId);
-        var modal = document.getElementById(modalId);
-        if (btn && modal) {
-            btn.addEventListener('click', function(modalElement) {
-                return function() { modalElement.style.display = 'none'; };
-            }(modal));
-        }
+        (function(btnId, modalId) {
+            var btn = document.getElementById(btnId);
+            var modal = document.getElementById(modalId);
+            if (btn && modal) {
+                btn.addEventListener('click', function() { modal.style.display = 'none'; });
+            }
+        })(btnId, closeButtons[btnId]);
     }
 }
 
@@ -119,7 +130,9 @@ function setupImportExport() {
                 trainingHistory: state.trainingHistory, 
                 customExercises: state.customExercises, 
                 bodyWeightHistory: state.bodyWeightHistory, 
-                customProducts: state.customProducts 
+                customProducts: state.customProducts,
+                workoutTemplates: state.workoutTemplates,
+                nutritionGoals: state.nutritionGoals
             }; 
             navigator.clipboard.writeText(JSON.stringify(exportData, null, 2)).then(function() { 
                 alert('JSON скопирован'); 
@@ -148,6 +161,8 @@ function setupImportExport() {
                     if (data.customExercises) state.customExercises = data.customExercises; 
                     if (data.bodyWeightHistory) state.bodyWeightHistory = data.bodyWeightHistory; 
                     if (data.customProducts) state.customProducts = data.customProducts; 
+                    if (data.workoutTemplates) state.workoutTemplates = data.workoutTemplates;
+                    if (data.nutritionGoals) state.nutritionGoals = data.nutritionGoals;
                     saveLocal(); 
                     if (renderAllFn) renderAllFn(); 
                     alert('Данные импортированы!'); 
