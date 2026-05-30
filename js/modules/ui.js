@@ -115,22 +115,22 @@ function setupImportExport() {
         const file = e.target.files[0]; 
         if (!file) return; 
         const reader = new FileReader(); 
-        reader.onload = (event) => { 
-            try { 
-                const data = JSON.parse(event.target.result); 
-                if (data.foodEntries) state.foodEntries = data.foodEntries; 
-                if (data.trainingHistory) state.trainingHistory = data.trainingHistory; 
-                if (data.customExercises) state.customExercises = data.customExercises; 
-                if (data.bodyWeightHistory) state.bodyWeightHistory = data.bodyWeightHistory; 
-                if (data.customProducts) state.customProducts = data.customProducts; 
-                saveLocal(); 
-                if (renderAllFn) renderAllFn(); 
-                alert('Данные импортированы!'); 
-                syncToCloud(); 
-            } catch(e) { 
-                alert('Ошибка импорта: ' + e.message); 
-            } 
-        }; 
+reader.onload = (event) => { 
+    try { 
+        const data = JSON.parse(event.target.result); 
+        if (data.foodEntries) state.foodEntries = data.foodEntries; 
+        if (data.trainingHistory) state.trainingHistory = data.trainingHistory; 
+        if (data.customExercises) state.customExercises = data.customExercises; 
+        if (data.bodyWeightHistory) state.bodyWeightHistory = data.bodyWeightHistory; 
+        if (data.customProducts) state.customProducts = data.customProducts; 
+        saveLocal(); 
+        if (renderAllFn) renderAllFn(); 
+        alert('Данные импортированы!'); 
+        syncToCloud(); 
+    } catch(e) { 
+        alert('Ошибка импорта: ' + e.message); 
+    } 
+};
         reader.readAsText(file); 
     });
 }
