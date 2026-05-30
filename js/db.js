@@ -1,7 +1,5 @@
 import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-import { db } from './config.js';
 
-// Состояние приложения
 export let state = {
     currentUser: null,
     foodEntries: [],
@@ -15,7 +13,9 @@ export let state = {
     openWorkoutDays: new Set(),
     openFoodDays: new Set(),
     currentOrderExercise: null,
-    currentEditWorkoutId: null
+    currentEditWorkoutId: null,
+    workoutTemplates: [],
+    nutritionGoals: { kcal: 2500, protein: 150, fat: 70, carbs: 300 }
 };
 
 export function saveLocal() { 
@@ -27,14 +27,16 @@ export function saveLocal() {
         nextId: state.nextId, 
         workoutExercisesOrder: state.workoutExercisesOrder, 
         currentWorkout: state.currentWorkout, 
-        customProducts: state.customProducts 
+        customProducts: state.customProducts,
+        workoutTemplates: state.workoutTemplates,
+        nutritionGoals: state.nutritionGoals
     })); 
 }
 
 export function loadLocal() { 
-    let s = localStorage.getItem('fitness_data'); 
+    var s = localStorage.getItem('fitness_data'); 
     if (s) { 
-        let d = JSON.parse(s); 
+        var d = JSON.parse(s); 
         state.foodEntries = d.foodEntries || []; 
         state.trainingHistory = d.trainingHistory || []; 
         state.customExercises = d.customExercises || state.customExercises; 
@@ -42,14 +44,17 @@ export function loadLocal() {
         state.nextId = d.nextId || 1; 
         state.workoutExercisesOrder = d.workoutExercisesOrder || []; 
         state.currentWorkout = d.currentWorkout || {}; 
-        state.customProducts = d.customProducts || {}; 
+        state.customProducts = d.customProducts || {};
+        state.workoutTemplates = d.workoutTemplates || [];
+        state.nutritionGoals = d.nutritionGoals || { kcal: 2500, protein: 150, fat: 70, carbs: 300 };
     } 
 }
 
 export async function syncToCloud() {
     if (!state.currentUser) return;
     try {
-        const userDocRef = doc(db, "users", state.currentUser.uid);
+        var db = window.db;
+        var userDocRef = doc(db, "users", state.currentUser.uid);
         await setDoc(userDocRef, {
             foodEntries: state.foodEntries,
             trainingHistory: state.trainingHistory,
@@ -59,6 +64,8 @@ export async function syncToCloud() {
             workoutExercisesOrder: state.workoutExercisesOrder,
             currentWorkout: state.currentWorkout,
             customProducts: state.customProducts,
+            workoutTemplates: state.workoutTemplates,
+            nutritionGoals: state.nutritionGoals,
             lastUpdated: new Date().toISOString()
         }, { merge: true });
     } catch (e) { console.error("Sync error:", e); }
@@ -67,10 +74,11 @@ export async function syncToCloud() {
 export async function loadFromCloud() {
     if (!state.currentUser) return;
     try {
-        const userDocRef = doc(db, "users", state.currentUser.uid);
-        const docSnap = await getDoc(userDocRef);
+        var db = window.db;
+        var userDocRef = doc(db, "users", state.currentUser.uid);
+        var docSnap = await getDoc(userDocRef);
         if (docSnap.exists()) {
-            const data = docSnap.data();
+            var data = docSnap.data();
             state.foodEntries = data.foodEntries || [];
             state.trainingHistory = data.trainingHistory || [];
             state.customExercises = data.customExercises || state.customExercises;
@@ -79,6 +87,8 @@ export async function loadFromCloud() {
             state.workoutExercisesOrder = data.workoutExercisesOrder || [];
             state.currentWorkout = data.currentWorkout || {};
             state.customProducts = data.customProducts || {};
+            state.workoutTemplates = data.workoutTemplates || [];
+            state.nutritionGoals = data.nutritionGoals || { kcal: 2500, protein: 150, fat: 70, carbs: 300 };
         }
     } catch (e) { console.error("Load error:", e); }
 }
