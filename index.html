@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <title>💪 Железный трекер</title>
+    
+    <!-- Стили -->
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/mobile.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Шапка -->
+        <div class="header-icons">
+            <div class="bicep-icon" id="bicepIcon">💪</div>
+            <div style="display: flex; gap: 12px;">
+                <div class="sync-icon" id="syncCloudBtn">☁️</div>
+                <div class="profile-icon" id="profileIcon">👤</div>
+            </div>
+        </div>
+
+        <!-- Экран входа -->
+        <div id="login-page" class="page active-page">
+            <div class="card login-card">
+                <h2>🔐 Вход</h2>
+                <input type="email" id="loginEmail" placeholder="Email" value="egorplus98@gmail.com">
+                <input type="password" id="loginPassword" placeholder="Пароль" value="egorplus2003">
+                <button id="loginBtn">Войти</button>
+            </div>
+        </div>
+
+        <!-- Основное приложение -->
+        <div id="app-page" class="page">
+            <!-- Тренировка -->
+            <div id="workout-page" class="page active-page">
+                <div class="card">
+                    <div class="input-row">
+                        <input type="date" id="workoutDate" class="date-input">
+                        <button id="showExercisePickerBtn" class="small-btn">➕ Упр.</button>
+                    </div>
+                    <div id="exercisesContainer" class="workout-table"></div>
+                    <div style="margin-top:12px;">
+                        <label>🔥 Ккал (просто число, например 1000)</label>
+                        <input type="text" id="caloriesInput" placeholder="1000" class="dark-input" style="margin-top:8px;">
+                        <button id="saveAllWorkoutsBtn" style="margin-top:12px;">💾 Сохранить</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Питание -->
+            <div id="food-page" class="page">
+                <div class="card">
+                    <div class="input-row"><input type="date" id="foodDate" class="date-input"></div>
+                    <div id="dailySummary" class="daily-summary">
+                        <div style="text-align:center;">📊 Итого за день</div>
+                        <div class="summary-grid">
+                            <div class="summary-item"><div class="summary-value" id="sumKcal">0</div><div class="summary-label">Ккал</div></div>
+                            <div class="summary-item"><div class="summary-value" id="sumProtein">0</div><div class="summary-label">Белки</div></div>
+                            <div class="summary-item"><div class="summary-value" id="sumFat">0</div><div class="summary-label">Жиры</div></div>
+                            <div class="summary-item"><div class="summary-value" id="sumCarbs">0</div><div class="summary-label">Углеводы</div></div>
+                        </div>
+                    </div>
+                    <div class="input-row" style="margin-top:12px;">
+                        <input type="text" id="productSearchInput" placeholder="Поиск продукта..." class="dark-input" style="flex:1;">
+                        <button id="searchProductBtn" class="small-btn">🔍</button>
+                    </div>
+                    <div id="searchResults"></div>
+                    <h3>🍽 Съедено:</h3>
+                    <div id="foodListContainer"></div>
+                    <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
+                        <button id="addManualFoodBtn" class="secondary" style="flex:1;">➕ Добавить вручную</button>
+                        <button id="addToBaseBtn" class="secondary" style="flex:1;">📦 Добавить в Базу</button>
+                        <button id="manageProductsBtn" class="secondary" style="flex:1;">📋 База продуктов</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- История -->
+            <div id="history-page" class="page">
+                <div class="card">
+                    <h2>📜 История</h2>
+                    <div class="history-tabs">
+                        <button class="history-tab-btn active" data-history="workout">💪 Тренировки</button>
+                        <button class="history-tab-btn" data-history="food">🍽 Питание</button>
+                    </div>
+                    <div id="workout-history-container" class="history-content active"></div>
+                    <div id="food-history-container" class="history-content"></div>
+                </div>
+            </div>
+
+            <!-- Графики -->
+            <div id="stats-page" class="page">
+                <div class="card">
+                    <div class="chart-group-tabs">
+                        <button class="chart-group-btn active" data-group="train">💪 Тренировка</button>
+                        <button class="chart-group-btn" data-group="food">🍽 Питание</button>
+                    </div>
+                    <div id="train-charts" class="chart-group active">
+                        <div class="chart-sub-tabs">
+                            <button class="chart-tab-btn active" data-chart="progress">📈 Прогресс 1ПМ</button>
+                            <button class="chart-tab-btn" data-chart="max">🏆 Макс. вес</button>
+                        </div>
+                        <div id="progress-chart-container" class="chart-container active">
+                            <select id="chartExerciseSelect" class="dark-select"></select>
+                            <canvas id="progressChart" height="160"></canvas>
+                        </div>
+                        <div id="max-chart-container" class="chart-container">
+                            <select id="maxChartExerciseSelect" class="dark-select"></select>
+                            <canvas id="maxChart" height="160"></canvas>
+                        </div>
+                    </div>
+                    <div id="food-charts" class="chart-group" style="display:none;">
+                        <div class="chart-sub-tabs">
+                            <button class="chart-tab-btn active" data-chart="kcal">🔥 Калории</button>
+                            <button class="chart-tab-btn" data-chart="protein">🥩 Белки</button>
+                            <button class="chart-tab-btn" data-chart="fat">🍗 Жиры</button>
+                            <button class="chart-tab-btn" data-chart="carbs">🍚 Углеводы</button>
+                            <button class="chart-tab-btn" data-chart="bju">📊 БЖУ</button>
+                        </div>
+                        <div id="kcal-chart-container" class="chart-container active"><canvas id="kcalChart" height="160"></canvas></div>
+                        <div id="protein-chart-container" class="chart-container"><canvas id="proteinChart" height="160"></canvas></div>
+                        <div id="fat-chart-container" class="chart-container"><canvas id="fatChart" height="160"></canvas></div>
+                        <div id="carbs-chart-container" class="chart-container"><canvas id="carbsChart" height="160"></canvas></div>
+                        <div id="bju-chart-container" class="chart-container"><canvas id="bjuChart" height="200"></canvas></div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h2>⚖️ Вес тела</h2>
+                    <canvas id="weightChart" height="160"></canvas>
+                </div>
+            </div>
+
+            <!-- ИИ -->
+            <div id="ai-page" class="page">
+                <div class="card">
+                    <button id="copyJsonBtn">📋 Копировать JSON</button>
+                    <button id="importJsonBtn" class="secondary" style="margin-top:8px;">📂 Импорт JSON</button>
+                    <input type="file" id="importFileInput" accept=".json" style="display:none;">
+                </div>
+                <div class="card">
+                    <button id="smartAdviceBtn">✨ Рекомендация</button>
+                    <div id="adviceOutput" style="background:#0a0e16; border-radius: 16px; padding: 14px; margin-top: 12px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Табы -->
+    <div class="tabs" id="mainTabs">
+        <button class="tab-btn active" data-tab="workout">💪 Тренировка</button>
+        <button class="tab-btn" data-tab="food">🍽 Питание</button>
+        <button class="tab-btn" data-tab="history">📜 История</button>
+        <button class="tab-btn" data-tab="stats">📊 Графики</button>
+        <button class="tab-btn" data-tab="ai">🧠 ИИ</button>
+    </div>
+
+    <!-- Модальные окна загружаются через ui.js -->
+
+    <!-- Firebase -->
+    <script type="module" src="js/config.js"></script>
+    <script type="module" src="js/utils/constants.js"></script>
+    <script type="module" src="js/utils/helpers.js"></script>
+    <script type="module" src="js/db.js"></script>
+    <script type="module" src="js/auth.js"></script>
+    <script type="module" src="js/modules/ui.js"></script>
+    <script type="module" src="js/modules/workouts.js"></script>
+    <script type="module" src="js/modules/nutrition.js"></script>
+    <script type="module" src="js/modules/charts.js"></script>
+    <script type="module" src="js/modules/history.js"></script>
+    <script type="module" src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+@media (max-width: 500px) {
+    .set-header { 
+        grid-template-columns: 25px 60px 75px 60px 55px 28px; 
+        gap: 4px; 
+    }
+    .set-row { 
+        grid-template-columns: 25px 60px 75px 60px 55px 28px; 
+        gap: 4px; 
+    }
+    .tabs { 
+        padding: 8px 3px; 
+        gap: 3px; 
+    }
+    .tab-btn { 
+        font-size: 11px; 
+        padding: 8px 0; 
+    }
+}
