@@ -1,8 +1,10 @@
 import { state, saveLocal, syncToCloud } from '../db.js';
 import { getToday } from '../utils/helpers.js';
-import { updateFoodCharts } from './charts.js';
 
-const builtinProducts = {
+// Не импортируем updateFoodCharts из-за циклической зависимости
+// Вызываем через window
+
+var builtinProducts = {
     "рис": { protein: 2.7, fat: 0.3, carbs: 28, kcal: 130 },
     "гречка": { protein: 12.6, fat: 3.3, carbs: 62, kcal: 313 },
     "куриная грудка": { protein: 31, fat: 3.6, carbs: 0, kcal: 165 },
@@ -14,10 +16,13 @@ const builtinProducts = {
     "макароны": { protein: 5, fat: 1, carbs: 30, kcal: 150 }
 };
 
-let currentMeal = 'breakfast';
+var currentMeal = 'breakfast';
 
 function getAllProducts() { 
-    return { ...builtinProducts, ...state.customProducts }; 
+    var result = {};
+    for (var key in builtinProducts) result[key] = builtinProducts[key];
+    for (var key in state.customProducts) result[key] = state.customProducts[key];
+    return result;
 }
 
 function findProductInDatabase(query) {
@@ -25,11 +30,19 @@ function findProductInDatabase(query) {
     var allProducts = getAllProducts();
     var results = [];
     for (var product in allProducts) {
-        if (product.toLowerCase().includes(lowerQuery)) {
-            results.push({ name: product, nutrition: allProducts[product], source: builtinProducts[product] ? 'builtin' : 'custom' });
+        if (product.toLowerCase().indexOf(lowerQuery) !== -1) {
+            results.push({ 
+                name: product, 
+                nutrition: allProducts[product], 
+                source: builtinProducts[product] ? 'builtin' : 'custom' 
+            });
         }
     }
     return results;
+}
+
+function callUpdateFoodCharts() {
+    if (window.updateFoodCharts) window.updateFoodCharts();
 }
 
 export async function addFoodItem(name, weight, nutrition, meal) {
@@ -48,7 +61,7 @@ export async function addFoodItem(name, weight, nutrition, meal) {
     });
     renderMeals(); 
     updateGoals();
-    updateFoodCharts(); 
+    callUpdateFoodCharts(); 
     saveLocal(); 
     await syncToCloud();
 }
@@ -58,7 +71,6 @@ export function renderMeals() {
     var dayEntries = state.foodEntries.filter(function(f) { return f.date === date; });
     
     var meals = ['breakfast', 'lunch', 'dinner', 'snack'];
-    var mealNames = { breakfast: 'breakfast', lunch: 'lunch', dinner: 'dinner', snack: 'snack' };
     
     meals.forEach(function(mealType) {
         var listEl = document.getElementById(mealType + 'List');
@@ -89,7 +101,7 @@ export function renderMeals() {
             state.foodEntries = state.foodEntries.filter(function(f) { return f.id !== id; });
             renderMeals();
             updateGoals();
-            updateFoodCharts();
+            callUpdateFoodCharts();
             saveLocal();
             await syncToCloud();
         });
@@ -112,20 +124,24 @@ function updateGoals() {
     
     var goals = state.nutritionGoals || { kcal: 2500, protein: 150, fat: 70, carbs: 300 };
     
-    document.getElementById('goalKcal').textContent = Math.round(total.kcal) + '/' + goals.kcal;
-    document.getElementById('goalProtein').textContent = total.protein.toFixed(1) + '/' + goals.protein;
-    document.getElementById('goalFat').textContent = total.fat.toFixed(1) + '/' + goals.fat;
-    document.getElementById('goalCarbs').textContent = total.carbs.toFixed(1) + '/' + goals.carbs;
+    var gk = document.getElementById('goalKcal');
+    var gp = document.getElementById('goalProtein');
+    var gf = document.getElementById('goalFat');
+    var gc = document.getElementById('goalCarbs');
+    var kp = document.getElementById('kcalProgress');
+    var pp = document.getElementById('proteinProgress');
+    var fp = document.getElementById('fatProgress');
+    var cp = document.getElementById('carbsProgress');
     
-    document.getElementById('kcalProgress').style.width = Math.min(100, (total.kcal / goals.kcal) * 100) + '%';
-    document.getElementById('proteinProgress').style.width = Math.min(100, (total.protein / goals.protein) * 100) + '%';
-    document.getElementById('fatProgress').style.width = Math.min(100, (total.fat / goals.fat) * 100) + '%';
-    document.getElementById('carbsProgress').style.width = Math.min(100, (total.carbs / goals.carbs) * 100) + '%';
+    if (gk) gk.textContent = Math.round(total.kcal) + '/' + goals.kcal;
+    if (gp) gp.textContent = total.protein.toFixed(1) + '/' + goals.protein;
+    if (gf) gf.textContent = total.fat.toFixed(1) + '/' + goals.fat;
+    if (gc) gc.textContent = total.carbs.toFixed(1) + '/' + goals.carbs;
     
-    // Уведомление о достижении целей
-    if (total.kcal >= goals.kcal && goals.kcal > 0) {
-        document.getElementById('kcalProgress').style.background = '#2ecc71';
-    }
+    if (kp) kp.style.width = Math.min(100, (total.kcal / goals.kcal) * 100) + '%';
+    if (pp) pp.style.width = Math.min(100, (total.protein / goals.protein) * 100) + '%';
+    if (fp) fp.style.width = Math.min(100, (total.fat / goals.fat) * 100) + '%';
+    if (cp) cp.style.width = Math.min(100, (total.carbs / goals.carbs) * 100) + '%';
 }
 
 export function setupNutritionButtons() {
@@ -138,86 +154,80 @@ export function setupNutritionButtons() {
         });
     });
     
-    document.getElementById('searchProductBtn')?.addEventListener('click', function() {
-        var query = document.getElementById('productSearchInput').value.trim();
-        if (!query) return;
-        var results = findProductInDatabase(query);
-        var container = document.getElementById('searchResults');
-        container.innerHTML = '';
-        if (results.length === 0) { 
-            container.innerHTML = '<div style="padding:12px;text-align:center;">❌ Ничего не найдено</div>'; 
-            return; 
-        }
-        results.forEach(function(result) {
-            var div = document.createElement('div');
-            div.className = 'compact-exercise-item';
-            div.innerHTML = '<span>' + result.name + '</span><button class="small-plus select-product-btn" data-name="' + result.name + '" data-protein="' + result.nutrition.protein + '" data-fat="' + result.nutrition.fat + '" data-carbs="' + result.nutrition.carbs + '" data-kcal="' + result.nutrition.kcal + '">+</button>';
-            container.appendChild(div);
-        });
-        document.querySelectorAll('.select-product-btn').forEach(function(btn) {
-            btn.addEventListener('click', function() {
-                var name = btn.dataset.name;
-                var nutrition = { 
-                    protein: parseFloat(btn.dataset.protein), 
-                    fat: parseFloat(btn.dataset.fat), 
-                    carbs: parseFloat(btn.dataset.carbs), 
-                    kcal: parseFloat(btn.dataset.kcal) 
-                };
-                showWeightModal(name, nutrition);
-                container.innerHTML = '';
+    var searchBtn = document.getElementById('searchProductBtn');
+    if (searchBtn) {
+        searchBtn.addEventListener('click', function() {
+            var query = document.getElementById('productSearchInput').value.trim();
+            if (!query) return;
+            var results = findProductInDatabase(query);
+            var container = document.getElementById('searchResults');
+            container.innerHTML = '';
+            if (results.length === 0) { 
+                container.innerHTML = '<div style="padding:12px;text-align:center;">❌ Ничего не найдено</div>'; 
+                return; 
+            }
+            results.forEach(function(result) {
+                var div = document.createElement('div');
+                div.className = 'compact-exercise-item';
+                div.innerHTML = '<span>' + result.name + '</span><button class="small-plus select-product-btn" data-name="' + result.name + '" data-protein="' + result.nutrition.protein + '" data-fat="' + result.nutrition.fat + '" data-carbs="' + result.nutrition.carbs + '" data-kcal="' + result.nutrition.kcal + '">+</button>';
+                container.appendChild(div);
+            });
+            document.querySelectorAll('.select-product-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var name = btn.dataset.name;
+                    var nutrition = { 
+                        protein: parseFloat(btn.dataset.protein), 
+                        fat: parseFloat(btn.dataset.fat), 
+                        carbs: parseFloat(btn.dataset.carbs), 
+                        kcal: parseFloat(btn.dataset.kcal) 
+                    };
+                    showWeightModal(name, nutrition);
+                    container.innerHTML = '';
+                });
             });
         });
-    });
+    }
     
-    document.getElementById('confirmWeightBtn')?.addEventListener('click', async function() {
-        var w = parseFloat(document.getElementById('selectedWeight').value);
-        if (w > 0 && window._selectedNutrition && window._selectedProduct) {
-            await addFoodItem(window._selectedProduct, w, window._selectedNutrition, currentMeal);
-            document.getElementById('weightModal').style.display = 'none';
-        }
-    });
+    var confirmBtn = document.getElementById('confirmWeightBtn');
+    if (confirmBtn) {
+        confirmBtn.addEventListener('click', async function() {
+            var w = parseFloat(document.getElementById('selectedWeight').value);
+            if (w > 0 && window._selectedNutrition && window._selectedProduct) {
+                await addFoodItem(window._selectedProduct, w, window._selectedNutrition, currentMeal);
+                document.getElementById('weightModal').style.display = 'none';
+            }
+        });
+    }
     
-    // Цели
-    document.getElementById('editGoalsBtn')?.addEventListener('click', function() {
-        var goals = state.nutritionGoals || { kcal: 2500, protein: 150, fat: 70, carbs: 300 };
-        document.getElementById('goalKcalInput').value = goals.kcal;
-        document.getElementById('goalProteinInput').value = goals.protein;
-        document.getElementById('goalFatInput').value = goals.fat;
-        document.getElementById('goalCarbsInput').value = goals.carbs;
-        document.getElementById('goalsModal').style.display = 'flex';
-    });
+    var editGoalsBtn = document.getElementById('editGoalsBtn');
+    if (editGoalsBtn) {
+        editGoalsBtn.addEventListener('click', function() {
+            var goals = state.nutritionGoals || { kcal: 2500, protein: 150, fat: 70, carbs: 300 };
+            document.getElementById('goalKcalInput').value = goals.kcal;
+            document.getElementById('goalProteinInput').value = goals.protein;
+            document.getElementById('goalFatInput').value = goals.fat;
+            document.getElementById('goalCarbsInput').value = goals.carbs;
+            document.getElementById('goalsModal').style.display = 'flex';
+        });
+    }
     
-    document.getElementById('saveGoalsBtn')?.addEventListener('click', async function() {
-        state.nutritionGoals = {
-            kcal: parseInt(document.getElementById('goalKcalInput').value) || 2500,
-            protein: parseInt(document.getElementById('goalProteinInput').value) || 150,
-            fat: parseInt(document.getElementById('goalFatInput').value) || 70,
-            carbs: parseInt(document.getElementById('goalCarbsInput').value) || 300
-        };
-        saveLocal();
-        await syncToCloud();
-        document.getElementById('goalsModal').style.display = 'none';
-        renderMeals();
-    });
-    
-    document.getElementById('closeGoalsBtn')?.addEventListener('click', function() {
-        document.getElementById('goalsModal').style.display = 'none';
-    });
+    var saveGoalsBtn = document.getElementById('saveGoalsBtn');
+    if (saveGoalsBtn) {
+        saveGoalsBtn.addEventListener('click', async function() {
+            state.nutritionGoals = {
+                kcal: parseInt(document.getElementById('goalKcalInput').value) || 2500,
+                protein: parseInt(document.getElementById('goalProteinInput').value) || 150,
+                fat: parseInt(document.getElementById('goalFatInput').value) || 70,
+                carbs: parseInt(document.getElementById('goalCarbsInput').value) || 300
+            };
+            saveLocal();
+            await syncToCloud();
+            document.getElementById('goalsModal').style.display = 'none';
+            renderMeals();
+        });
+    }
     
     document.getElementById('foodDate')?.addEventListener('change', function() { renderMeals(); });
-    
-    // Закрытие модалок
-    ['closeAddFoodModal', 'closeAddToBaseModal', 'closeWeightModal', 'closeProductManagerBtn'].forEach(function(id) {
-        var btn = document.getElementById(id);
-        if (btn) {
-            btn.addEventListener('click', function() {
-                var modalId = id.replace('close', '').replace('Btn', '');
-                modalId = modalId.charAt(0).toLowerCase() + modalId.slice(1);
-                var modal = document.getElementById(modalId + 'Modal');
-                if (modal) modal.style.display = 'none';
-            });
-        }
-    });
 }
 
 export function showWeightModal(productName, nutrition) {
