@@ -5,6 +5,10 @@ import { renderWorkoutHistory, renderFoodHistory } from './history.js';
 import { renderFoodList, renderProductManagerLists } from './nutrition.js';
 import { getToday } from '../utils/helpers.js';
 
+// Эта функция будет установлена из app.js
+let renderAllFn = null;
+export function setRenderAll(fn) { renderAllFn = fn; }
+
 export function setupUI() {
     setupTabs();
     setupChartTabs();
@@ -45,6 +49,7 @@ function setupChartTabs() {
     document.querySelectorAll('.chart-tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             let parent = btn.closest('.chart-group');
+            if (!parent) return;
             parent.querySelectorAll('.chart-tab-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             let chartType = btn.dataset.chart;
@@ -102,7 +107,10 @@ function setupImportExport() {
         navigator.clipboard.writeText(JSON.stringify(exportData, null, 2)).then(() => alert('JSON скопирован')); 
     });
     
-    document.getElementById('importJsonBtn')?.addEventListener('click', () => { document.getElementById('importFileInput').click(); });
+    document.getElementById('importJsonBtn')?.addEventListener('click', () => { 
+        document.getElementById('importFileInput').click(); 
+    });
+    
     document.getElementById('importFileInput')?.addEventListener('change', (e) => { 
         const file = e.target.files[0]; 
         if (!file) return; 
@@ -116,18 +124,22 @@ function setupImportExport() {
                 if (data.bodyWeightHistory) state.bodyWeightHistory = data.bodyWeightHistory; 
                 if (data.customProducts) state.customProducts = data.customProducts; 
                 saveLocal(); 
-                import { renderAll } from '../app.js';
-                renderAll(); 
+                if (renderAllFn) renderAllFn(); 
                 alert('Данные импортированы!'); 
                 syncToCloud(); 
-            } catch(e) { alert('Ошибка импорта: ' + e.message); } 
+            } catch(e) { 
+                alert('Ошибка импорта: ' + e.message); 
+            } 
         }; 
         reader.readAsText(file); 
     });
 }
 
 function setupProfile() {
-    document.getElementById('syncCloudBtn')?.addEventListener('click', async () => { await syncToCloud(); alert('Синхронизация завершена!'); });
+    document.getElementById('syncCloudBtn')?.addEventListener('click', async () => { 
+        await syncToCloud(); 
+        alert('Синхронизация завершена!'); 
+    });
     
     document.getElementById('profileIcon')?.addEventListener('click', () => { 
         if (state.currentUser) {
@@ -168,7 +180,8 @@ function showSmartAdvice() {
         else if (lastSet.reps >= 6) text += `   → Можно добавить +2.5 кг или +1 повтор\n`;
         else text += `   → Снизь вес на 5-10%, работай 8-12 повторов\n`;
     }
-    document.getElementById('adviceOutput').innerHTML = text || 'Нет данных';
+    const adviceOutput = document.getElementById('adviceOutput');
+    if (adviceOutput) adviceOutput.innerHTML = text || 'Нет данных';
 }
 
 function updateWeightHistoryList() {
