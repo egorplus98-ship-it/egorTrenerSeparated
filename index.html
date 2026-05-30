@@ -6,12 +6,40 @@
     <title>💪 Железный трекер</title>
     
     <!-- Стили -->
-    <link rel="stylesheet" href="css/main.css">
-    <link rel="stylesheet" href="css/components.css">
-    <link rel="stylesheet" href="css/mobile.css">
+    <link rel="stylesheet" href="./css/main.css">
+    <link rel="stylesheet" href="./css/components.css">
+    <link rel="stylesheet" href="./css/mobile.css">
     
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- Firebase через CDN -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDCsFzRcG3qpS7kL42QZwsLho8eh8EirNY",
+            authDomain: "egortrener-5485d.firebaseapp.com",
+            projectId: "egortrener-5485d",
+            storageBucket: "egortrener-5485d.firebasestorage.app",
+            messagingSenderId: "876864869628",
+            appId: "1:876864869628:web:c49c65ac028490f5cdf379"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        
+        window.firebaseApp = app;
+        window.firebaseAuth = getAuth(app);
+        window.firebaseDb = getFirestore(app);
+        window.firebaseSignIn = signInWithEmailAndPassword;
+        window.firebaseSignOut = signOut;
+        window.firebaseOnAuthStateChanged = onAuthStateChanged;
+        window.firebaseDoc = doc;
+        window.firebaseSetDoc = setDoc;
+        window.firebaseGetDoc = getDoc;
+    </script>
 </head>
 <body>
     <div class="container">
@@ -45,7 +73,7 @@
                     </div>
                     <div id="exercisesContainer" class="workout-table"></div>
                     <div style="margin-top:12px;">
-                        <label>🔥 Ккал (просто число, например 1000)</label>
+                        <label>🔥 Ккал</label>
                         <input type="text" id="caloriesInput" placeholder="1000" class="dark-input" style="margin-top:8px;">
                         <button id="saveAllWorkoutsBtn" style="margin-top:12px;">💾 Сохранить</button>
                     </div>
@@ -159,19 +187,120 @@
         <button class="tab-btn" data-tab="ai">🧠 ИИ</button>
     </div>
 
-    <!-- Модальные окна загружаются через ui.js -->
+    <!-- Модальные окна -->
+    <div id="profileModal" class="modal-overlay">
+        <div class="modal-window">
+            <h2>Мои данные</h2>
+            <div class="profile-field"><label>Рост (см)</label><input type="number" id="userHeight" class="dark-input" placeholder="175"></div>
+            <div class="profile-field"><label>Вес (кг)</label><input type="number" id="userWeight" class="dark-input" placeholder="75"></div>
+            <div class="profile-field"><label>Пол</label><select id="userGender" class="dark-select"><option>Мужской</option><option>Женский</option></select></div>
+            <div class="profile-field"><label>Возраст</label><input type="number" id="userAge" class="dark-input" placeholder="25"></div>
+            <h3>📋 Список упражнений</h3>
+            <div id="exerciseManageList" class="exercise-list-compact"></div>
+            <div class="input-row"><input type="text" id="newExerciseNameInput" placeholder="Новое упражнение" class="dark-input" style="flex:1;"><button id="addExerciseFromModalBtn" class="small-btn">➕</button></div>
+            <h3>⚖️ Вес тела</h3>
+            <div class="input-row"><input type="date" id="weightDateInput" class="date-input"><input type="number" id="weightValueInput" placeholder="кг" class="dark-input" style="flex:1;"><button id="addWeightBtn" class="small-btn">+</button></div>
+            <div id="weightHistoryList"></div>
+            <button id="closeProfileBtn" class="secondary">Закрыть</button>
+        </div>
+    </div>
 
-    <!-- Firebase -->
-    <script type="module" src="js/config.js"></script>
-    <script type="module" src="js/utils/constants.js"></script>
-    <script type="module" src="js/utils/helpers.js"></script>
-    <script type="module" src="js/db.js"></script>
-    <script type="module" src="js/auth.js"></script>
-    <script type="module" src="js/modules/ui.js"></script>
-    <script type="module" src="js/modules/workouts.js"></script>
-    <script type="module" src="js/modules/nutrition.js"></script>
-    <script type="module" src="js/modules/charts.js"></script>
-    <script type="module" src="js/modules/history.js"></script>
-    <script type="module" src="js/app.js"></script>
+    <div id="exercisePickerModal" class="modal-overlay">
+        <div class="modal-window">
+            <h3>➕ Выбрать упражнение</h3>
+            <div id="exercisePickerList" class="exercise-list-compact"></div>
+            <button id="closePickerBtn" class="secondary">Отмена</button>
+        </div>
+    </div>
+
+    <div id="orderModal" class="modal-overlay">
+        <div class="modal-window">
+            <h3>🔢 Порядок</h3>
+            <p id="orderExerciseName"></p>
+            <div class="input-row"><input type="number" id="orderNumberInput" placeholder="Номер" class="dark-input"><button id="confirmOrderBtn">Переместить</button></div>
+            <button id="closeOrderBtn" class="secondary">Отмена</button>
+        </div>
+    </div>
+
+    <div id="addFoodModal" class="modal-overlay">
+        <div class="modal-window">
+            <h3>➕ Добавить продукт в еду</h3>
+            <div class="profile-field"><label>Продукт</label><input type="text" id="manualFoodName" class="dark-input"></div>
+            <div class="profile-field"><label>Вес (г)</label><input type="number" id="manualFoodWeight" class="dark-input" value="100"></div>
+            <div class="profile-field"><label>Белки (на 100г)</label><input type="number" id="manualFoodProtein" class="dark-input"></div>
+            <div class="profile-field"><label>Жиры (на 100г)</label><input type="number" id="manualFoodFat" class="dark-input"></div>
+            <div class="profile-field"><label>Углеводы (на 100г)</label><input type="number" id="manualFoodCarbs" class="dark-input"></div>
+            <div class="profile-field"><label>Ккал (на 100г)</label><input type="number" id="manualFoodKcal" class="dark-input"></div>
+            <div class="modal-buttons"><button id="confirmAddFoodBtn">Добавить</button><button id="closeAddFoodModal" class="secondary">Отмена</button></div>
+        </div>
+    </div>
+
+    <div id="addToBaseModal" class="modal-overlay">
+        <div class="modal-window">
+            <h3>📦 Добавить в базу продуктов</h3>
+            <div class="profile-field"><label>Название</label><input type="text" id="baseProductName" class="dark-input"></div>
+            <div class="profile-field"><label>Белки (на 100г)</label><input type="number" id="baseProductProtein" class="dark-input"></div>
+            <div class="profile-field"><label>Жиры (на 100г)</label><input type="number" id="baseProductFat" class="dark-input"></div>
+            <div class="profile-field"><label>Углеводы (на 100г)</label><input type="number" id="baseProductCarbs" class="dark-input"></div>
+            <div class="profile-field"><label>Ккал (на 100г)</label><input type="number" id="baseProductKcal" class="dark-input"></div>
+            <div class="modal-buttons"><button id="confirmAddToBaseBtn">➕ Добавить</button><button id="closeAddToBaseModal" class="secondary">Отмена</button></div>
+        </div>
+    </div>
+
+    <div id="weightModal" class="modal-overlay">
+        <div class="modal-window">
+            <h3>⚖️ Вес порции</h3>
+            <p id="weightProductName"></p>
+            <div class="profile-field"><label>Граммы</label><input type="number" id="selectedWeight" class="dark-input" value="100"></div>
+            <div class="modal-buttons"><button id="confirmWeightBtn">Добавить</button><button id="closeWeightModal" class="secondary">Отмена</button></div>
+        </div>
+    </div>
+
+    <div id="productManagerModal" class="modal-overlay">
+        <div class="modal-window">
+            <h2>📋 База данных продуктов</h2>
+            <div class="products-tabs">
+                <button class="products-tab-btn active" data-products-tab="builtin">📦 Встроенные</button>
+                <button class="products-tab-btn" data-products-tab="custom">🌟 Мои продукты</button>
+            </div>
+            <div id="builtin-products-container" class="products-list" style="max-height:400px; overflow-y:auto;"></div>
+            <div id="custom-products-container" class="products-list" style="max-height:400px; overflow-y:auto; display:none;"></div>
+            <button id="closeProductManagerBtn" class="secondary" style="margin-top:12px;">Закрыть</button>
+        </div>
+    </div>
+
+    <div id="editCustomProductModal" class="modal-overlay">
+        <div class="modal-window">
+            <h3>✏️ Редактировать продукт</h3>
+            <input type="hidden" id="editProductOldName">
+            <div class="profile-field"><label>Название</label><input type="text" id="editProductName" class="dark-input"></div>
+            <div class="profile-field"><label>Белки (на 100г)</label><input type="number" id="editProductProtein" class="dark-input"></div>
+            <div class="profile-field"><label>Жиры (на 100г)</label><input type="number" id="editProductFat" class="dark-input"></div>
+            <div class="profile-field"><label>Углеводы (на 100г)</label><input type="number" id="editProductCarbs" class="dark-input"></div>
+            <div class="profile-field"><label>Ккал (на 100г)</label><input type="number" id="editProductKcal" class="dark-input"></div>
+            <div class="modal-buttons"><button id="saveEditedProductBtn">Сохранить</button><button id="closeEditProductModal" class="secondary">Отмена</button></div>
+        </div>
+    </div>
+
+    <div id="editCaloriesModal" class="modal-overlay">
+        <div class="modal-window">
+            <h3>✏️ Редактировать калории</h3>
+            <div class="profile-field"><label>Калории (ккал)</label><input type="text" id="editCaloriesInput" class="dark-input" placeholder="Например: 1000"></div>
+            <div class="modal-buttons"><button id="saveCaloriesBtn">Сохранить</button><button id="closeCaloriesModal" class="secondary">Отмена</button></div>
+        </div>
+    </div>
+
+    <!-- Скрипты -->
+    <script type="module" src="./js/config.js"></script>
+    <script type="module" src="./js/utils/constants.js"></script>
+    <script type="module" src="./js/utils/helpers.js"></script>
+    <script type="module" src="./js/db.js"></script>
+    <script type="module" src="./js/auth.js"></script>
+    <script type="module" src="./js/modules/ui.js"></script>
+    <script type="module" src="./js/modules/workouts.js"></script>
+    <script type="module" src="./js/modules/nutrition.js"></script>
+    <script type="module" src="./js/modules/charts.js"></script>
+    <script type="module" src="./js/modules/history.js"></script>
+    <script type="module" src="./js/app.js"></script>
 </body>
 </html>
