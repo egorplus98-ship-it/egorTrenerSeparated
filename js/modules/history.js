@@ -1,11 +1,10 @@
 import { state, saveLocal, syncToCloud } from '../db.js';
 import { formatDateToDMY, parseCalories } from '../utils/helpers.js';
-import { updateProgressChart, updateMaxChart } from './charts.js';
-import { renderFoodList, updateFoodCharts } from './nutrition.js';
+import { updateProgressChart, updateMaxChart, updateFoodCharts } from './charts.js';
+import { renderFoodList } from './nutrition.js';
 
-// Убрал циклическую зависимость — updateFoodCharts импортируется в nutrition.js из charts.js
-// Здесь будем использовать напрямую из charts
-import { updateFoodCharts as refreshFoodCharts } from './charts.js';
+// Убираем строку с импортом updateFoodCharts из nutrition.js
+// и используем напрямую из charts.js
 
 export function renderWorkoutHistory() {
     let container = document.getElementById('workout-history-container');
@@ -109,6 +108,6 @@ export function renderFoodHistory() {
     }
     
     document.querySelectorAll('.history-food-header').forEach(header => { header.addEventListener('click', (e) => { if (e.target.classList.contains('delete-food-day')) return; const date = header.dataset.date; if (state.openFoodDays.has(date)) state.openFoodDays.delete(date); else state.openFoodDays.add(date); renderFoodHistory(); }); });
-    document.querySelectorAll('.delete-food-day').forEach(btn => { btn.addEventListener('click', async (e) => { e.stopPropagation(); let date = btn.dataset.date; if (confirm(`Удалить все записи о еде за ${formatDateToDMY(date)}?`)) { state.foodEntries = state.foodEntries.filter(f => f.date !== date); state.openFoodDays.delete(date); renderFoodHistory(); renderFoodList(); refreshFoodCharts(); saveLocal(); await syncToCloud(); } }); });
-    document.querySelectorAll('.delete-food').forEach(btn => btn.addEventListener('click', async (e) => { e.stopPropagation(); let id = parseInt(btn.dataset.id); state.foodEntries = state.foodEntries.filter(f => f.id !== id); renderFoodHistory(); renderFoodList(); refreshFoodCharts(); saveLocal(); await syncToCloud(); }));
-}
+    document.querySelectorAll('.delete-food-day').forEach(btn => { btn.addEventListener('click', async (e) => { e.stopPropagation(); let date = btn.dataset.date; if (confirm(`Удалить все записи о еде за ${formatDateToDMY(date)}?`)) { state.foodEntries = state.foodEntries.filter(f => f.date !== date); state.openFoodDays.delete(date); renderFoodHistory(); renderFoodList(); updateFoodCharts(); saveLocal(); await syncToCloud(); } }); });
+    document.querySelectorAll('.delete-food').forEach(btn => btn.addEventListener('click', async (e) => { e.stopPropagation(); let id = parseInt(btn.dataset.id); state.foodEntries = state.foodEntries.filter(f => f.id !== id); renderFoodHistory(); renderFoodList(); updateFoodCharts(); saveLocal(); await syncToCloud(); }));
+}ы
