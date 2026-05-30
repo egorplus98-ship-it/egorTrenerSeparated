@@ -2,6 +2,9 @@ import { state, saveLocal, syncToCloud } from '../db.js';
 import { getToday } from '../utils/helpers.js';
 import { builtinProducts } from '../utils/constants.js';
 
+// Импортируем updateFoodCharts из charts.js
+import { updateFoodCharts } from './charts.js';
+
 function getAllProducts() { return { ...builtinProducts, ...state.customProducts }; }
 
 function findProductInDatabase(query) {
@@ -52,7 +55,6 @@ function updateDailySummary(list) {
 }
 
 export function setupNutritionButtons() {
-    // Поиск продуктов
     document.getElementById('searchProductBtn')?.addEventListener('click', () => {
         let query = document.getElementById('productSearchInput').value.trim();
         if (!query) return;
@@ -77,7 +79,6 @@ export function setupNutritionButtons() {
         });
     });
 
-    // Ручное добавление
     document.getElementById('addManualFoodBtn')?.addEventListener('click', () => { document.getElementById('addFoodModal').style.display = 'flex'; });
     document.getElementById('confirmAddFoodBtn')?.addEventListener('click', async () => {
         let name = document.getElementById('manualFoodName').value.trim();
@@ -92,7 +93,6 @@ export function setupNutritionButtons() {
         } else alert('Заполните название и вес');
     });
 
-    // База продуктов
     document.getElementById('addToBaseBtn')?.addEventListener('click', () => { document.getElementById('addToBaseModal').style.display = 'flex'; });
     document.getElementById('confirmAddToBaseBtn')?.addEventListener('click', async () => {
         let name = document.getElementById('baseProductName').value.trim();
@@ -116,6 +116,3 @@ export function showWeightModal(productName, nutrition) {
     window._selectedProduct = productName;
     document.getElementById('weightModal').style.display = 'flex';
 }
-
-// Импорт функции updateFoodCharts, чтобы избежать циклической зависимости
-import { updateFoodCharts } from './charts.js';
