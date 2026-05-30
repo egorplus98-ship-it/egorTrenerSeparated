@@ -7,7 +7,6 @@ import { renderFoodList, setupNutritionButtons, showWeightModal } from './module
 import { updateProgressChart, updateMaxChart, updateFoodCharts, updateWeightChart, setupChartListeners } from './modules/charts.js';
 import { renderWorkoutHistory, renderFoodHistory, setupCaloriesEdit } from './modules/history.js';
 
-// Глобальные функции
 window.showWeightModal = showWeightModal;
 
 export function renderAll() {
@@ -39,7 +38,12 @@ function updateWeightHistoryList() {
     }));
 }
 
-// Инициализация
+function formatDateToDMY(d) { 
+    if (!d) return ""; 
+    let p = d.split('-'); 
+    return p.length === 3 ? `${p[2]}.${p[1]}.${p[0]}` : d; 
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     loadLocal();
     document.getElementById('mainTabs').style.display = 'none';
@@ -54,7 +58,6 @@ document.addEventListener('DOMContentLoaded', () => {
     setupChartListeners();
     setupCaloriesEdit();
     
-    // Вес тела
     document.getElementById('addWeightBtn')?.addEventListener('click', async () => {
         let date = document.getElementById('weightDateInput').value;
         let weight = parseFloat(document.getElementById('weightValueInput').value);
