@@ -1,7 +1,7 @@
 import { state, saveLocal, syncToCloud } from '../db.js';
 import { formatDateToDMY, parseCalories } from '../utils/helpers.js';
 import { updateProgressChart, updateMaxChart, updateFoodCharts } from './charts.js';
-import { renderFoodList } from './nutrition.js';
+import { renderMeals } from './nutrition.js';
 
 export function renderWorkoutHistory() {
     let container = document.getElementById('workout-history-container');
@@ -187,7 +187,7 @@ export function renderFoodHistory() {
                 state.foodEntries = state.foodEntries.filter(f => f.date !== date); 
                 state.openFoodDays.delete(date); 
                 renderFoodHistory(); 
-                renderFoodList(); 
+                renderMeals(); 
                 updateFoodCharts(); 
                 saveLocal(); 
                 await syncToCloud(); 
@@ -200,7 +200,7 @@ export function renderFoodHistory() {
         let id = parseInt(btn.dataset.id); 
         state.foodEntries = state.foodEntries.filter(f => f.id !== id); 
         renderFoodHistory(); 
-        renderFoodList(); 
+       renderMeals(); 
         updateFoodCharts(); 
         saveLocal(); 
         await syncToCloud(); 
