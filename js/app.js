@@ -1,3 +1,5 @@
+// js/app.js
+
 import { state, loadLocal, saveLocal, syncToCloud } from './db.js';
 import { setupAuth } from './auth.js';
 import { getToday } from './utils/helpers.js';
@@ -8,6 +10,7 @@ import { updateProgressChart, updateMaxChart, updateFoodCharts, updateWeightChar
 import { renderWorkoutHistory, renderFoodHistory, setupCaloriesEdit } from './modules/history.js';
 
 window.showWeightModal = showWeightModal;
+window.updateFoodCharts = updateFoodCharts;
 
 export function renderAll() {
     renderExercises();
