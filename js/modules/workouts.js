@@ -133,6 +133,57 @@ function setupWorkoutEventListeners() {
     });
 }
 
+function startRestTimer(seconds) {
+    if (restTimerActive) return;
+    var enableTimer = document.getElementById('enableRestTimer');
+    if (!enableTimer || !enableTimer.checked) return;
+    
+    restTimerActive = true;
+    restSeconds = seconds;
+    
+    var overlay = document.createElement('div');
+    overlay.className = 'rest-timer-overlay';
+    overlay.id = 'restTimerOverlay';
+    overlay.innerHTML = '<div class="rest-timer-circle" id="restTimerCircle">' + formatTime(restSeconds) + '</div>' +
+        '<button id="skipRestTimer" style="margin-top:20px;width:auto;padding:10px 30px;">Пропустить</button>';
+    document.body.appendChild(overlay);
+    
+    var display = document.getElementById('restTimerDisplay');
+    if (display) {
+        display.style.display = 'inline';
+        display.textContent = formatTime(restSeconds);
+    }
+    
+    restTimerInterval = setInterval(function() {
+        restSeconds--;
+        var circle = document.getElementById('restTimerCircle');
+        if (display) display.textContent = formatTime(restSeconds);
+        if (circle) circle.textContent = formatTime(restSeconds);
+        
+        if (restSeconds <= 0) {
+            stopRestTimer();
+            if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+        }
+    }, 1000);
+    
+    document.getElementById('skipRestTimer').addEventListener('click', stopRestTimer);
+}
+
+function stopRestTimer() {
+    restTimerActive = false;
+    clearInterval(restTimerInterval);
+    var overlay = document.getElementById('restTimerOverlay');
+    if (overlay) overlay.remove();
+    var display = document.getElementById('restTimerDisplay');
+    if (display) display.style.display = 'none';
+}
+
+function formatTime(sec) {
+    var m = Math.floor(sec / 60);
+    var s = sec % 60;
+    return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
+}
+
 export function setupWorkoutButtons() {
     var saveBtn = document.getElementById('saveAllWorkoutsBtn');
     if (saveBtn) {
@@ -191,10 +242,7 @@ export function setupWorkoutButtons() {
             var template = {
                 name: name,
                 exercises: state.workoutExercisesOrder.map(function(ex) {
-                    return {
-                        name: ex,
-                        sets: state.currentWorkout[ex] ? state.currentWorkout[ex].length : 3
-                    };
+                    return { name: ex, sets: state.currentWorkout[ex] ? state.currentWorkout[ex].length : 3 };
                 })
             };
             
