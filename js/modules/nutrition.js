@@ -1,9 +1,6 @@
 import { state, saveLocal, syncToCloud } from '../db.js';
 import { getToday } from '../utils/helpers.js';
 
-// Не импортируем updateFoodCharts из-за циклической зависимости
-// Вызываем через window
-
 var builtinProducts = {
     "рис": { protein: 2.7, fat: 0.3, carbs: 28, kcal: 130 },
     "гречка": { protein: 12.6, fat: 3.3, carbs: 62, kcal: 313 },
@@ -31,11 +28,7 @@ function findProductInDatabase(query) {
     var results = [];
     for (var product in allProducts) {
         if (product.toLowerCase().indexOf(lowerQuery) !== -1) {
-            results.push({ 
-                name: product, 
-                nutrition: allProducts[product], 
-                source: builtinProducts[product] ? 'builtin' : 'custom' 
-            });
+            results.push({ name: product, nutrition: allProducts[product], source: builtinProducts[product] ? 'builtin' : 'custom' });
         }
     }
     return results;
@@ -150,7 +143,8 @@ export function setupNutritionButtons() {
     document.querySelectorAll('.add-to-meal-btn').forEach(function(btn) {
         btn.addEventListener('click', function() {
             currentMeal = btn.dataset.meal;
-            document.getElementById('productSearchInput').focus();
+            var searchInput = document.getElementById('productSearchInput');
+            if (searchInput) searchInput.focus();
         });
     });
     
@@ -169,6 +163,7 @@ export function setupNutritionButtons() {
             results.forEach(function(result) {
                 var div = document.createElement('div');
                 div.className = 'compact-exercise-item';
+                div.style.cssText = 'display:flex;justify-content:space-between;align-items:center;background:#1e2332;padding:10px 14px;border-radius:14px;';
                 div.innerHTML = '<span>' + result.name + '</span><button class="small-plus select-product-btn" data-name="' + result.name + '" data-protein="' + result.nutrition.protein + '" data-fat="' + result.nutrition.fat + '" data-carbs="' + result.nutrition.carbs + '" data-kcal="' + result.nutrition.kcal + '">+</button>';
                 container.appendChild(div);
             });
@@ -188,9 +183,9 @@ export function setupNutritionButtons() {
         });
     }
     
-    var confirmBtn = document.getElementById('confirmWeightBtn');
-    if (confirmBtn) {
-        confirmBtn.addEventListener('click', async function() {
+    var confirmWeightBtn = document.getElementById('confirmWeightBtn');
+    if (confirmWeightBtn) {
+        confirmWeightBtn.addEventListener('click', async function() {
             var w = parseFloat(document.getElementById('selectedWeight').value);
             if (w > 0 && window._selectedNutrition && window._selectedProduct) {
                 await addFoodItem(window._selectedProduct, w, window._selectedNutrition, currentMeal);
@@ -227,7 +222,8 @@ export function setupNutritionButtons() {
         });
     }
     
-    document.getElementById('foodDate')?.addEventListener('change', function() { renderMeals(); });
+    var foodDateEl = document.getElementById('foodDate');
+    if (foodDateEl) foodDateEl.addEventListener('change', function() { renderMeals(); });
 }
 
 export function showWeightModal(productName, nutrition) {
@@ -245,8 +241,8 @@ export function renderProductManagerLists() {
         for (var name in builtinProducts) {
             var nutrition = builtinProducts[name];
             var div = document.createElement('div');
-            div.className = 'product-item';
-            div.innerHTML = '<div><div class="product-name">' + name + '</div><div class="product-nutrition">Б:' + nutrition.protein + ' Ж:' + nutrition.fat + ' У:' + nutrition.carbs + ' Ккал:' + nutrition.kcal + '</div></div><span style="font-size:11px;color:#9ba1bc;">📦</span>';
+            div.style.cssText = 'background:#1e2332;padding:10px;border-radius:12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;';
+            div.innerHTML = '<div><b>' + name + '</b><div style="font-size:11px;color:#9ba1bc;">Б:' + nutrition.protein + ' Ж:' + nutrition.fat + ' У:' + nutrition.carbs + ' Ккал:' + nutrition.kcal + '</div></div><span style="font-size:11px;color:#9ba1bc;">📦</span>';
             builtinContainer.appendChild(div);
         }
     }
@@ -257,9 +253,20 @@ export function renderProductManagerLists() {
         for (var name in state.customProducts) {
             var nutrition = state.customProducts[name];
             var div = document.createElement('div');
-            div.className = 'product-item';
-            div.innerHTML = '<div><div class="product-name">' + name + '</div><div class="product-nutrition">Б:' + nutrition.protein + ' Ж:' + nutrition.fat + ' У:' + nutrition.carbs + ' Ккал:' + nutrition.kcal + '</div></div><div class="action-buttons"><button class="round-delete delete-custom-product" data-name="' + name + '">✕</button></div>';
+            div.style.cssText = 'background:#1e2332;padding:10px;border-radius:12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;';
+            div.innerHTML = '<div><b>' + name + '</b><div style="font-size:11px;color:#9ba1bc;">Б:' + nutrition.protein + ' Ж:' + nutrition.fat + ' У:' + nutrition.carbs + ' Ккал:' + nutrition.kcal + '</div></div><button class="round-delete" data-name="' + name + '">✕</button>';
             customContainer.appendChild(div);
         }
+        document.querySelectorAll('#custom-products-container .round-delete').forEach(function(btn) {
+            btn.addEventListener('click', async function() {
+                var name = btn.dataset.name;
+                if (confirm('Удалить "' + name + '"?')) {
+                    delete state.customProducts[name];
+                    saveLocal();
+                    await syncToCloud();
+                    renderProductManagerLists();
+                }
+            });
+        });
     }
 }
