@@ -143,6 +143,14 @@ export function setupNutritionButtons() {
     document.querySelectorAll('.add-to-meal-btn').forEach(function(btn) {
         btn.addEventListener('click', function() {
             currentMeal = btn.dataset.meal;
+            // Убираем подсветку со всех
+            document.querySelectorAll('.add-to-meal-btn').forEach(function(b) { 
+                b.style.background = '#ff7b2c'; 
+                b.classList.remove('active-meal');
+            });
+            // Подсвечиваем выбранный
+            btn.style.background = '#2ecc71';
+            btn.classList.add('active-meal');
             var searchInput = document.getElementById('productSearchInput');
             if (searchInput) searchInput.focus();
         });
