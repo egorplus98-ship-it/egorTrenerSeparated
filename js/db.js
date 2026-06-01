@@ -1,6 +1,6 @@
 import { doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
 
-export let state = {
+export var state = {
     currentUser: null,
     foodEntries: [],
     trainingHistory: [],
