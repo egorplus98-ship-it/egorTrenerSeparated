@@ -1,10 +1,9 @@
 import { state, saveLocal, syncToCloud } from '../db.js';
 import { parseCalories, generateRepOptions, generateEffortOptions } from '../utils/helpers.js';
 
-// Таймер отдыха
-let restTimerInterval = null;
-let restSeconds = 0;
-let restTimerActive = false;
+var restTimerInterval = null;
+var restSeconds = 0;
+var restTimerActive = false;
 
 export function renderExercises() {
     var container = document.getElementById('exercisesContainer');
@@ -33,10 +32,7 @@ export function renderExercises() {
                 '</select>' +
                 '<select class="set-input" data-exercise="' + exercise + '" data-set-idx="' + i + '" data-field="reps">' + generateRepOptions(s.reps) + '</select>' +
                 '<select class="set-input" data-exercise="' + exercise + '" data-set-idx="' + i + '" data-field="effort">' + generateEffortOptions(s.effort) + '</select>' +
-                '<div style="display:flex;gap:4px;">' +
-                    '<button class="delete-set-btn" data-exercise="' + exercise + '" data-set-idx="' + i + '">✕</button>' +
-                    '<button class="rest-timer-btn" data-exercise="' + exercise + '" data-set-idx="' + i + '" style="background:#ff7b2c;border:none;border-radius:50%;width:24px;height:24px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:10px;color:black;">⏱</button>' +
-                '</div>' +
+                '<button class="delete-set-btn" data-exercise="' + exercise + '" data-set-idx="' + i + '">✕</button>' +
             '</div>';
         });
         
@@ -135,194 +131,149 @@ function setupWorkoutEventListeners() {
             } 
         });
     });
-    
-    // Кнопки таймера
-    document.querySelectorAll('.rest-timer-btn').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            if (document.getElementById('enableRestTimer').checked) {
-                var duration = parseInt(document.getElementById('restTimerDuration').value) || 90;
-                startRestTimer(duration);
-            }
-        });
-    });
-}
-
-// Таймер отдыха
-function startRestTimer(seconds) {
-    if (restTimerActive) return;
-    restTimerActive = true;
-    restSeconds = seconds;
-    
-    var overlay = document.createElement('div');
-    overlay.className = 'rest-timer-overlay';
-    overlay.id = 'restTimerOverlay';
-    overlay.innerHTML = '<div class="rest-timer-circle" id="restTimerCircle">' + formatTime(restSeconds) + '</div>' +
-        '<button id="skipRestTimer" style="margin-top:20px;width:auto;padding:10px 30px;">Пропустить</button>';
-    document.body.appendChild(overlay);
-    
-    document.getElementById('restTimerDisplay').style.display = 'inline';
-    document.getElementById('restTimerDisplay').textContent = formatTime(restSeconds);
-    
-    restTimerInterval = setInterval(function() {
-        restSeconds--;
-        var circle = document.getElementById('restTimerCircle');
-        var display = document.getElementById('restTimerDisplay');
-        if (circle) circle.textContent = formatTime(restSeconds);
-        if (display) display.textContent = formatTime(restSeconds);
-        
-        if (restSeconds <= 0) {
-            stopRestTimer();
-            if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-        }
-    }, 1000);
-    
-    document.getElementById('skipRestTimer').addEventListener('click', stopRestTimer);
-}
-
-function stopRestTimer() {
-    restTimerActive = false;
-    clearInterval(restTimerInterval);
-    var overlay = document.getElementById('restTimerOverlay');
-    if (overlay) overlay.remove();
-    document.getElementById('restTimerDisplay').style.display = 'none';
-}
-
-function formatTime(sec) {
-    var m = Math.floor(sec / 60);
-    var s = sec % 60;
-    return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
 }
 
 export function setupWorkoutButtons() {
-    document.getElementById('saveAllWorkoutsBtn')?.addEventListener('click', async function() {
-        var date = document.getElementById('workoutDate').value;
-        if (!date) { alert('Выберите дату'); return; }
-        
-        var saved = 0;
-        var caloriesValue = parseCalories(document.getElementById('caloriesInput').value);
-        var feeling = parseInt(document.getElementById('workoutFeeling').value) || 7;
-        var notes = document.getElementById('workoutNotes').value.trim();
-        
-        for (var i = 0; i < state.workoutExercisesOrder.length; i++) {
-            var ex = state.workoutExercisesOrder[i];
-            var sets = state.currentWorkout[ex];
-            if (sets && sets.length) {
-                state.trainingHistory.push({ 
-                    id: state.nextId++, 
-                    date: date, 
-                    exercise: ex, 
-                    sets: sets.map(function(s) { 
-                        return { weight: s.weight, weightType: s.type || 'kg', reps: s.reps, effort: s.effort || 7 }; 
-                    }), 
-                    calories: caloriesValue,
-                    feeling: feeling,
-                    notes: notes
-                });
-                saved++;
-                state.currentWorkout[ex] = [];
+    var saveBtn = document.getElementById('saveAllWorkoutsBtn');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', async function() {
+            var date = document.getElementById('workoutDate').value;
+            if (!date) { alert('Выберите дату'); return; }
+            
+            var saved = 0;
+            var caloriesValue = parseCalories(document.getElementById('caloriesInput').value);
+            var feelingEl = document.getElementById('workoutFeeling');
+            var notesEl = document.getElementById('workoutNotes');
+            var feeling = feelingEl ? parseInt(feelingEl.value) || 7 : 7;
+            var notes = notesEl ? notesEl.value.trim() : '';
+            
+            for (var i = 0; i < state.workoutExercisesOrder.length; i++) {
+                var ex = state.workoutExercisesOrder[i];
+                var sets = state.currentWorkout[ex];
+                if (sets && sets.length) {
+                    state.trainingHistory.push({ 
+                        id: state.nextId++, 
+                        date: date, 
+                        exercise: ex, 
+                        sets: sets.map(function(s) { 
+                            return { weight: s.weight, weightType: s.type || 'kg', reps: s.reps, effort: s.effort || 7 }; 
+                        }), 
+                        calories: caloriesValue,
+                        feeling: feeling,
+                        notes: notes
+                    });
+                    saved++;
+                    state.currentWorkout[ex] = [];
+                }
             }
-        }
-        
-        state.workoutExercisesOrder = [];
-        
-        if (saved) { 
-            renderExercises(); 
-            saveLocal(); 
-            await syncToCloud(); 
-            document.getElementById('caloriesInput').value = ''; 
-            document.getElementById('workoutNotes').value = '';
-            alert('Сохранено ' + saved + ' упражнений'); 
-        } else {
-            alert('Нет подходов');
-        }
-    });
+            
+            state.workoutExercisesOrder = [];
+            
+            if (saved) { 
+                renderExercises(); 
+                saveLocal(); 
+                await syncToCloud(); 
+                document.getElementById('caloriesInput').value = ''; 
+                if (notesEl) notesEl.value = '';
+                alert('Сохранено ' + saved + ' упражнений'); 
+            } else {
+                alert('Нет подходов');
+            }
+        });
+    }
     
-    // Сохранение тренировки как шаблон
-    document.getElementById('saveAsTemplateBtn')?.addEventListener('click', async function() {
-        var name = document.getElementById('newTemplateName').value.trim();
-        if (!name) { alert('Введите название шаблона'); return; }
-        
-        var template = {
-            name: name,
-            exercises: state.workoutExercisesOrder.map(function(ex) {
-                return {
-                    name: ex,
-                    sets: state.currentWorkout[ex] ? state.currentWorkout[ex].length : 3
-                };
-            })
-        };
-        
-        if (template.exercises.length === 0) { alert('Добавьте упражнения'); return; }
-        
-        if (!state.workoutTemplates) state.workoutTemplates = [];
-        state.workoutTemplates.push(template);
-        saveLocal();
-        await syncToCloud();
-        document.getElementById('newTemplateName').value = '';
-        renderTemplatesList();
-        alert('Шаблон сохранён!');
-    });
+    var templateBtn = document.getElementById('saveAsTemplateBtn');
+    if (templateBtn) {
+        templateBtn.addEventListener('click', async function() {
+            var name = document.getElementById('newTemplateName').value.trim();
+            if (!name) { alert('Введите название шаблона'); return; }
+            
+            var template = {
+                name: name,
+                exercises: state.workoutExercisesOrder.map(function(ex) {
+                    return {
+                        name: ex,
+                        sets: state.currentWorkout[ex] ? state.currentWorkout[ex].length : 3
+                    };
+                })
+            };
+            
+            if (template.exercises.length === 0) { alert('Добавьте упражнения'); return; }
+            
+            if (!state.workoutTemplates) state.workoutTemplates = [];
+            state.workoutTemplates.push(template);
+            saveLocal();
+            await syncToCloud();
+            document.getElementById('newTemplateName').value = '';
+            renderTemplatesList();
+            alert('Шаблон сохранён!');
+        });
+    }
 }
 
 export function setupExerciseManagement() {
-    document.getElementById('showExercisePickerBtn')?.addEventListener('click', function() {
-        var container = document.getElementById('exercisePickerList');
-        container.innerHTML = '';
-        state.customExercises.forEach(function(ex) { 
-            var div = document.createElement('div'); 
-            div.className = 'compact-exercise-item'; 
-            div.innerHTML = '<span>' + ex + '</span><button class="small-plus" data-ex="' + ex + '">+</button>'; 
-            container.appendChild(div); 
+    var pickerBtn = document.getElementById('showExercisePickerBtn');
+    if (pickerBtn) {
+        pickerBtn.addEventListener('click', function() {
+            var container = document.getElementById('exercisePickerList');
+            container.innerHTML = '';
+            state.customExercises.forEach(function(ex) { 
+                var div = document.createElement('div'); 
+                div.className = 'compact-exercise-item'; 
+                div.innerHTML = '<span>' + ex + '</span><button class="small-plus" data-ex="' + ex + '">+</button>'; 
+                container.appendChild(div); 
+            });
+            document.querySelectorAll('#exercisePickerList .small-plus').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var exercise = btn.dataset.ex;
+                    if (!state.currentWorkout[exercise]) state.currentWorkout[exercise] = [];
+                    if (state.currentWorkout[exercise].length === 0) {
+                        state.currentWorkout[exercise].push({ weight: 60, type: 'kg', reps: 8, effort: 7 });
+                    }
+                    if (state.workoutExercisesOrder.indexOf(exercise) === -1) {
+                        state.workoutExercisesOrder.push(exercise);
+                    }
+                    renderExercises(); 
+                    document.getElementById('exercisePickerModal').style.display = 'none'; 
+                    saveLocal(); 
+                    syncToCloud();
+                });
+            });
+            document.getElementById('exercisePickerModal').style.display = 'flex';
         });
-        document.querySelectorAll('#exercisePickerList .small-plus').forEach(function(btn) {
-            btn.addEventListener('click', function() {
-                var exercise = btn.dataset.ex;
-                if (!state.currentWorkout[exercise]) state.currentWorkout[exercise] = [];
-                if (state.currentWorkout[exercise].length === 0) {
-                    state.currentWorkout[exercise].push({ weight: 60, type: 'kg', reps: 8, effort: 7 });
-                }
-                if (state.workoutExercisesOrder.indexOf(exercise) === -1) {
-                    state.workoutExercisesOrder.push(exercise);
-                }
+    }
+
+    var orderBtn = document.getElementById('confirmOrderBtn');
+    if (orderBtn) {
+        orderBtn.addEventListener('click', function() {
+            var newPos = parseInt(document.getElementById('orderNumberInput').value);
+            if (!state.currentOrderExercise || isNaN(newPos)) { alert('Введите номер'); return; }
+            var oldIdx = state.workoutExercisesOrder.indexOf(state.currentOrderExercise);
+            if (oldIdx === -1) { document.getElementById('orderModal').style.display = 'none'; return; }
+            var newIdx = newPos - 1;
+            if (newIdx < 0 || newIdx >= state.workoutExercisesOrder.length) { 
+                alert('Введите число от 1 до ' + state.workoutExercisesOrder.length); 
+                return; 
+            }
+            if (oldIdx !== newIdx) {
+                var moved = state.workoutExercisesOrder[oldIdx];
+                state.workoutExercisesOrder.splice(oldIdx, 1);
+                state.workoutExercisesOrder.splice(newIdx, 0, moved);
                 renderExercises(); 
-                document.getElementById('exercisePickerModal').style.display = 'none'; 
                 saveLocal(); 
                 syncToCloud();
-            });
+            }
+            document.getElementById('orderModal').style.display = 'none';
         });
-        document.getElementById('exercisePickerModal').style.display = 'flex';
-    });
-
-    document.getElementById('confirmOrderBtn')?.addEventListener('click', function() {
-        var newPos = parseInt(document.getElementById('orderNumberInput').value);
-        if (!state.currentOrderExercise || isNaN(newPos)) { alert('Введите номер'); return; }
-        var oldIdx = state.workoutExercisesOrder.indexOf(state.currentOrderExercise);
-        if (oldIdx === -1) { document.getElementById('orderModal').style.display = 'none'; return; }
-        var newIdx = newPos - 1;
-        if (newIdx < 0 || newIdx >= state.workoutExercisesOrder.length) { 
-            alert('Введите число от 1 до ' + state.workoutExercisesOrder.length); 
-            return; 
-        }
-        if (oldIdx !== newIdx) {
-            var moved = state.workoutExercisesOrder[oldIdx];
-            state.workoutExercisesOrder.splice(oldIdx, 1);
-            state.workoutExercisesOrder.splice(newIdx, 0, moved);
-            renderExercises(); 
-            saveLocal(); 
-            syncToCloud();
-        }
-        document.getElementById('orderModal').style.display = 'none';
-    });
+    }
     
-    // Шаблоны
-    document.getElementById('showTemplatesBtn')?.addEventListener('click', function() {
-        renderTemplatesList();
-        document.getElementById('templatesModal').style.display = 'flex';
-    });
-    
-    document.getElementById('closeTemplatesBtn')?.addEventListener('click', function() {
-        document.getElementById('templatesModal').style.display = 'none';
-    });
+    var templatesBtn = document.getElementById('showTemplatesBtn');
+    if (templatesBtn) {
+        templatesBtn.addEventListener('click', function() {
+            renderTemplatesList();
+            document.getElementById('templatesModal').style.display = 'flex';
+        });
+    }
 }
 
 function renderTemplatesList() {
