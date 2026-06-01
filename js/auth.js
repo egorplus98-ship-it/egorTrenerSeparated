@@ -5,20 +5,23 @@ import { getToday } from './utils/helpers.js';
 import { renderAll } from './app.js';
 
 export function setupAuth() {
-    document.getElementById('loginBtn')?.addEventListener('click', () => { 
-        const email = document.getElementById('loginEmail').value; 
-        const password = document.getElementById('loginPassword').value; 
-        if (email && password) handleLogin(email, password); 
-        else alert('Введите email и пароль'); 
-    });
+    var loginBtn = document.getElementById('loginBtn');
+    if (loginBtn) {
+        loginBtn.addEventListener('click', function() { 
+            var email = document.getElementById('loginEmail').value; 
+            var password = document.getElementById('loginPassword').value; 
+            if (email && password) handleLogin(email, password); 
+            else alert('Введите email и пароль'); 
+        });
+    }
 
-    onAuthStateChanged(auth, (user) => {
+    onAuthStateChanged(auth, function(user) {
         if (user && !state.currentUser) {
             state.currentUser = user;
             document.getElementById('login-page').classList.remove('active-page');
             document.getElementById('app-page').classList.add('active-page');
             document.getElementById('mainTabs').style.display = 'flex';
-            loadFromCloud().then(() => { 
+            loadFromCloud().then(function() { 
                 renderAll(); 
                 document.getElementById('workoutDate').value = getToday(); 
                 document.getElementById('foodDate').value = getToday(); 
@@ -34,7 +37,7 @@ export function setupAuth() {
 
 async function handleLogin(email, password) {
     try {
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        var userCredential = await signInWithEmailAndPassword(auth, email, password);
         state.currentUser = userCredential.user;
         document.getElementById('login-page').classList.remove('active-page');
         document.getElementById('app-page').classList.add('active-page');
