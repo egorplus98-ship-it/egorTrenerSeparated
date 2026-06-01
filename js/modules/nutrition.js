@@ -143,12 +143,10 @@ export function setupNutritionButtons() {
     document.querySelectorAll('.add-to-meal-btn').forEach(function(btn) {
         btn.addEventListener('click', function() {
             currentMeal = btn.dataset.meal;
-            // Убираем подсветку со всех
             document.querySelectorAll('.add-to-meal-btn').forEach(function(b) { 
                 b.style.background = '#ff7b2c'; 
                 b.classList.remove('active-meal');
             });
-            // Подсвечиваем выбранный
             btn.style.background = '#2ecc71';
             btn.classList.add('active-meal');
             var searchInput = document.getElementById('productSearchInput');
@@ -171,7 +169,6 @@ export function setupNutritionButtons() {
             results.forEach(function(result) {
                 var div = document.createElement('div');
                 div.className = 'compact-exercise-item';
-                div.style.cssText = 'display:flex;justify-content:space-between;align-items:center;background:#1e2332;padding:10px 14px;border-radius:14px;';
                 div.innerHTML = '<span>' + result.name + '</span><button class="small-plus select-product-btn" data-name="' + result.name + '" data-protein="' + result.nutrition.protein + '" data-fat="' + result.nutrition.fat + '" data-carbs="' + result.nutrition.carbs + '" data-kcal="' + result.nutrition.kcal + '">+</button>';
                 container.appendChild(div);
             });
@@ -230,6 +227,13 @@ export function setupNutritionButtons() {
         });
     }
     
+    var closeEditBtn = document.getElementById('closeEditProductModal');
+    if (closeEditBtn) {
+        closeEditBtn.addEventListener('click', function() {
+            document.getElementById('editCustomProductModal').style.display = 'none';
+        });
+    }
+    
     var foodDateEl = document.getElementById('foodDate');
     if (foodDateEl) foodDateEl.addEventListener('change', function() { renderMeals(); });
 }
@@ -249,10 +253,29 @@ export function renderProductManagerLists() {
         for (var name in builtinProducts) {
             var nutrition = builtinProducts[name];
             var div = document.createElement('div');
-            div.style.cssText = 'background:#1e2332;padding:10px;border-radius:12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;';
-            div.innerHTML = '<div><b>' + name + '</b><div style="font-size:11px;color:#9ba1bc;">Б:' + nutrition.protein + ' Ж:' + nutrition.fat + ' У:' + nutrition.carbs + ' Ккал:' + nutrition.kcal + '</div></div><span style="font-size:11px;color:#9ba1bc;">📦</span>';
+            div.className = 'product-item';
+            div.innerHTML = '<div>' +
+                '<div class="product-name">' + name + '</div>' +
+                '<div class="product-nutrition">Б:' + nutrition.protein + ' Ж:' + nutrition.fat + ' У:' + nutrition.carbs + ' Ккал:' + nutrition.kcal + '</div>' +
+                '</div>' +
+                '<div class="action-buttons">' +
+                    '<button class="round-edit edit-builtin-product" data-name="' + name + '" data-protein="' + nutrition.protein + '" data-fat="' + nutrition.fat + '" data-carbs="' + nutrition.carbs + '" data-kcal="' + nutrition.kcal + '">✏️</button>' +
+                    '<span style="font-size:11px;color:#9ba1bc;">📦</span>' +
+                '</div>';
             builtinContainer.appendChild(div);
         }
+        
+        document.querySelectorAll('.edit-builtin-product').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                document.getElementById('editProductOldName').value = btn.dataset.name;
+                document.getElementById('editProductName').value = btn.dataset.name;
+                document.getElementById('editProductProtein').value = btn.dataset.protein;
+                document.getElementById('editProductFat').value = btn.dataset.fat;
+                document.getElementById('editProductCarbs').value = btn.dataset.carbs;
+                document.getElementById('editProductKcal').value = btn.dataset.kcal;
+                document.getElementById('editCustomProductModal').style.display = 'flex';
+            });
+        });
     }
     
     var customContainer = document.getElementById('custom-products-container');
@@ -261,20 +284,68 @@ export function renderProductManagerLists() {
         for (var name in state.customProducts) {
             var nutrition = state.customProducts[name];
             var div = document.createElement('div');
-            div.style.cssText = 'background:#1e2332;padding:10px;border-radius:12px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;';
-            div.innerHTML = '<div><b>' + name + '</b><div style="font-size:11px;color:#9ba1bc;">Б:' + nutrition.protein + ' Ж:' + nutrition.fat + ' У:' + nutrition.carbs + ' Ккал:' + nutrition.kcal + '</div></div><button class="round-delete" data-name="' + name + '">✕</button>';
+            div.className = 'product-item';
+            div.innerHTML = '<div>' +
+                '<div class="product-name">' + name + '</div>' +
+                '<div class="product-nutrition">Б:' + nutrition.protein + ' Ж:' + nutrition.fat + ' У:' + nutrition.carbs + ' Ккал:' + nutrition.kcal + '</div>' +
+                '</div>' +
+                '<div class="action-buttons">' +
+                    '<button class="round-edit edit-custom-product" data-name="' + name + '">✏️</button>' +
+                    '<button class="round-delete delete-custom-product" data-name="' + name + '">✕</button>' +
+                '</div>';
             customContainer.appendChild(div);
         }
-        document.querySelectorAll('#custom-products-container .round-delete').forEach(function(btn) {
+        
+        document.querySelectorAll('.edit-custom-product').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                var name = btn.dataset.name;
+                var product = state.customProducts[name];
+                if (product) {
+                    document.getElementById('editProductOldName').value = name;
+                    document.getElementById('editProductName').value = name;
+                    document.getElementById('editProductProtein').value = product.protein;
+                    document.getElementById('editProductFat').value = product.fat;
+                    document.getElementById('editProductCarbs').value = product.carbs;
+                    document.getElementById('editProductKcal').value = product.kcal;
+                    document.getElementById('editCustomProductModal').style.display = 'flex';
+                }
+            });
+        });
+        
+        document.querySelectorAll('.delete-custom-product').forEach(function(btn) {
             btn.addEventListener('click', async function() {
                 var name = btn.dataset.name;
-                if (confirm('Удалить "' + name + '"?')) {
+                if (confirm('Удалить продукт "' + name + '"?')) {
                     delete state.customProducts[name];
                     saveLocal();
                     await syncToCloud();
                     renderProductManagerLists();
                 }
             });
+        });
+    }
+    
+    var saveEditedBtn = document.getElementById('saveEditedProductBtn');
+    if (saveEditedBtn) {
+        saveEditedBtn.addEventListener('click', async function() {
+            var oldName = document.getElementById('editProductOldName').value;
+            var newName = document.getElementById('editProductName').value.trim();
+            var protein = parseFloat(document.getElementById('editProductProtein').value) || 0;
+            var fat = parseFloat(document.getElementById('editProductFat').value) || 0;
+            var carbs = parseFloat(document.getElementById('editProductCarbs').value) || 0;
+            var kcal = parseFloat(document.getElementById('editProductKcal').value) || (protein * 4 + fat * 9 + carbs * 4);
+            
+            if (newName) {
+                if (oldName !== newName) delete state.customProducts[oldName];
+                state.customProducts[newName] = { protein: protein, fat: fat, carbs: carbs, kcal: kcal };
+                saveLocal();
+                await syncToCloud();
+                document.getElementById('editCustomProductModal').style.display = 'none';
+                renderProductManagerLists();
+                alert('Продукт "' + newName + '" сохранён!');
+            } else {
+                alert('Введите название');
+            }
         });
     }
 }
