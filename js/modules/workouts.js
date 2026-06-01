@@ -32,7 +32,10 @@ export function renderExercises() {
                 '</select>' +
                 '<select class="set-input" data-exercise="' + exercise + '" data-set-idx="' + i + '" data-field="reps">' + generateRepOptions(s.reps) + '</select>' +
                 '<select class="set-input" data-exercise="' + exercise + '" data-set-idx="' + i + '" data-field="effort">' + generateEffortOptions(s.effort) + '</select>' +
-                '<button class="delete-set-btn" data-exercise="' + exercise + '" data-set-idx="' + i + '">✕</button>' +
+                '<div style="display:flex;gap:4px;">' +
+                    '<button class="delete-set-btn" data-exercise="' + exercise + '" data-set-idx="' + i + '">✕</button>' +
+                    '<button class="rest-timer-btn" data-exercise="' + exercise + '" data-set-idx="' + i + '">⏱</button>' +
+                '</div>' +
             '</div>';
         });
         
@@ -129,6 +132,16 @@ function setupWorkoutEventListeners() {
                 saveLocal(); 
                 syncToCloud(); 
             } 
+        });
+    });
+    
+    document.querySelectorAll('.rest-timer-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var enableTimer = document.getElementById('enableRestTimer');
+            if (enableTimer && enableTimer.checked) {
+                var duration = parseInt(document.getElementById('restTimerDuration').value) || 90;
+                startRestTimer(duration);
+            }
         });
     });
 }
