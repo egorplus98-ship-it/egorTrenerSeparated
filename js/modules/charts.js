@@ -4,7 +4,6 @@ import { formatDateToDMY, calculate1RM } from '../utils/helpers.js';
 var charts = {};
 
 export function updateProgressChart() {
-    console.log('updateProgressChart работает');
     var select = document.getElementById('chartExerciseSelect');
     if (!select) return;
     var prev = select.value;
@@ -28,7 +27,6 @@ export function updateProgressChart() {
 }
 
 export function updateMaxChart() {
-    console.log('updateMaxChart работает');
     var select = document.getElementById('maxChartExerciseSelect');
     if (!select) return;
     var prev = select.value;
@@ -58,7 +56,6 @@ export function updateMaxChart() {
 }
 
 export function updateTonnageChart() {
-    console.log('updateTonnageChart работает');
     var select = document.getElementById('tonnageChartExerciseSelect');
     if (!select) return;
     var prev = select.value;
@@ -86,7 +83,6 @@ export function updateTonnageChart() {
 }
 
 export function updateFoodCharts() {
-    console.log('updateFoodCharts работает');
     var grouped = {};
     state.foodEntries.forEach(function(f) { 
         if (!grouped[f.date]) grouped[f.date] = { kcal: 0, protein: 0, fat: 0, carbs: 0 }; 
@@ -101,14 +97,12 @@ export function updateFoodCharts() {
         if (p) charts.protein = new Chart(p, { type: 'line', data: { labels: labels, datasets: [{ label: 'Белки', data: dates.map(function(d) { return grouped[d].protein; }), borderColor: '#2ecc71', fill: false }] }, options: { responsive: true, maintainAspectRatio: false } });
         if (f) charts.fat = new Chart(f, { type: 'line', data: { labels: labels, datasets: [{ label: 'Жиры', data: dates.map(function(d) { return grouped[d].fat; }), borderColor: '#f1c40f', fill: false }] }, options: { responsive: true, maintainAspectRatio: false } });
         if (c) charts.carbs = new Chart(c, { type: 'line', data: { labels: labels, datasets: [{ label: 'Углеводы', data: dates.map(function(d) { return grouped[d].carbs; }), borderColor: '#3498db', fill: false }] }, options: { responsive: true, maintainAspectRatio: false } });
-        if (b) charts.bju = new Chart(b, { type: 'bar', data: { labels: labels, datasets: [{ label: 'Белки', data: dates.map(function(d) { return grouped[d].protein; }), backgroundColor: '#2ecc71' }, { label: 'Жиры', data: dates.map(function(d) { return grouped[d].fat; }), backgroundColor: '#f1c40f' }, { label: 'Углы', data: dates.map(function(d) { return grouped[d].carbs; }), backgroundColor: '#3498db' }] }, options: { responsive: true, maintainAspectRatio: false } });
+        if (b) charts.bju = new Chart(b, { type: 'bar', data: { labels: labels, datasets: [{ label: 'Белки', data: dates.map(function(d) { return grouped[d].protein; }), backgroundColor: '#2ecc71' }, { label: 'Жиры', data: dates.map(function(d) { return grouped[d].fat; }), backgroundColor: '#f1c40f' }, { label: 'Углеводы', data: dates.map(function(d) { return grouped[d].carbs; }), backgroundColor: '#3498db' }] }, options: { responsive: true, maintainAspectRatio: false } });
     }
 }
 
 export var weightChart = null;
-
 export function updateWeightChart() {
-    console.log('updateWeightChart работает');
     var sorted = [].concat(state.bodyWeightHistory).sort(function(a,b) { return new Date(a.date) - new Date(b.date); });
     var ctx = document.getElementById('weightChart')?.getContext('2d');
     if (!ctx) return;
@@ -117,7 +111,6 @@ export function updateWeightChart() {
 }
 
 export function setupChartListeners() {
-    console.log('setupChartListeners работает');
     document.getElementById('chartExerciseSelect')?.addEventListener('change', function() { updateProgressChart(); });
     document.getElementById('maxChartExerciseSelect')?.addEventListener('change', function() { updateMaxChart(); });
     document.getElementById('tonnageChartExerciseSelect')?.addEventListener('change', function() { updateTonnageChart(); });
