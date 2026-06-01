@@ -1,7 +1,10 @@
 import { state, saveLocal, syncToCloud } from '../db.js';
 import { formatDateToDMY, parseCalories } from '../utils/helpers.js';
 import { updateProgressChart, updateMaxChart, updateFoodCharts } from './charts.js';
-import { renderMeals } from './nutrition.js';
+
+function callRenderMeals() {
+    if (window.renderMeals) window.renderMeals();
+}
 
 export function renderWorkoutHistory() {
     var container = document.getElementById('workout-history-container');
@@ -41,6 +44,8 @@ export function renderWorkoutHistory() {
                 setsHtml += '<div class="history-set-item">▪️ ' + (s.weightType === 'bw' ? 'Свой вес' : s.weight + ' кг') + ' × ' + s.reps + ' (💪' + s.effort + ')</div>'; 
             });
             setsHtml += '</div>';
+            if (w.feeling) setsHtml += '<div style="font-size:12px;color:#ff7b2c;">😊 Самочувствие: ' + w.feeling + '/10</div>';
+            if (w.notes) setsHtml += '<div style="font-size:12px;color:#9ba1bc;">📝 ' + w.notes + '</div>';
             var exDiv = document.createElement('div'); 
             exDiv.className = 'history-exercise';
             exDiv.innerHTML = '<div style="display:flex;justify-content:space-between;"><b>🏋️ ' + w.exercise + '</b><button class="round-delete delete-workout-btn" data-id="' + w.id + '">🗑</button></div>' + setsHtml;
@@ -107,20 +112,23 @@ function setupWorkoutHistoryListeners() {
 }
 
 export function setupCaloriesEdit() {
-    document.getElementById('saveCaloriesBtn')?.addEventListener('click', async function() {
-        if (state.currentEditWorkoutId) {
-            var newCalories = parseCalories(document.getElementById('editCaloriesInput').value);
-            state.trainingHistory = state.trainingHistory.map(function(w) { 
-                if (w.date === state.currentEditWorkoutId) return { ...w, calories: newCalories }; 
-                return w; 
-            });
-            renderWorkoutHistory(); 
-            saveLocal(); 
-            await syncToCloud();
-            document.getElementById('editCaloriesModal').style.display = 'none';
-            state.currentEditWorkoutId = null;
-        }
-    });
+    var saveBtn = document.getElementById('saveCaloriesBtn');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', async function() {
+            if (state.currentEditWorkoutId) {
+                var newCalories = parseCalories(document.getElementById('editCaloriesInput').value);
+                state.trainingHistory = state.trainingHistory.map(function(w) { 
+                    if (w.date === state.currentEditWorkoutId) return { ...w, calories: newCalories }; 
+                    return w; 
+                });
+                renderWorkoutHistory(); 
+                saveLocal(); 
+                await syncToCloud();
+                document.getElementById('editCaloriesModal').style.display = 'none';
+                state.currentEditWorkoutId = null;
+            }
+        });
+    }
 }
 
 export function renderFoodHistory() {
@@ -181,7 +189,7 @@ export function renderFoodHistory() {
                 state.foodEntries = state.foodEntries.filter(function(f) { return f.date !== date; }); 
                 state.openFoodDays.delete(date); 
                 renderFoodHistory(); 
-                renderMeals(); 
+                callRenderMeals(); 
                 updateFoodCharts(); 
                 saveLocal(); 
                 await syncToCloud(); 
@@ -195,7 +203,7 @@ export function renderFoodHistory() {
             var id = parseInt(btn.dataset.id); 
             state.foodEntries = state.foodEntries.filter(function(f) { return f.id !== id; }); 
             renderFoodHistory(); 
-            renderMeals(); 
+            callRenderMeals(); 
             updateFoodCharts(); 
             saveLocal(); 
             await syncToCloud(); 
