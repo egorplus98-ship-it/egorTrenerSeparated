@@ -3,7 +3,7 @@ import { updateProgressChart, updateMaxChart, updateFoodCharts, updateWeightChar
 import { renderWorkoutHistory, renderFoodHistory } from './history.js';
 import { renderMeals, renderProductManagerLists } from './nutrition.js';
 
-let renderAllFn = null;
+var renderAllFn = null;
 export function setRenderAll(fn) { renderAllFn = fn; }
 
 export function setupUI() {
@@ -45,29 +45,29 @@ function setupChartTabs() {
 
     document.querySelectorAll('.chart-tab-btn').forEach(function(btn) {
         btn.addEventListener('click', function() {
-            var parent = btn.closest('.chart-group');
+            var parent = btn.closest('.chart-group') || document.getElementById('train-charts');
             if (!parent) return;
             parent.querySelectorAll('.chart-tab-btn').forEach(function(b) { b.classList.remove('active'); });
             btn.classList.add('active');
             var chartType = btn.dataset.chart;
             parent.querySelectorAll('.chart-container').forEach(function(c) { c.classList.remove('active'); });
             if (chartType === 'progress') { 
-                parent.querySelector('#progress-chart-container').classList.add('active'); 
+                document.getElementById('progress-chart-container').classList.add('active'); 
                 setTimeout(function() { updateProgressChart(); }, 0); 
             }
             else if (chartType === 'max') { 
-                parent.querySelector('#max-chart-container').classList.add('active'); 
+                document.getElementById('max-chart-container').classList.add('active'); 
                 setTimeout(function() { updateMaxChart(); }, 0); 
             }
             else if (chartType === 'tonnage') { 
-                parent.querySelector('#tonnage-chart-container').classList.add('active'); 
+                document.getElementById('tonnage-chart-container').classList.add('active'); 
                 setTimeout(function() { updateTonnageChart(); }, 0); 
             }
-            else if (chartType === 'kcal') parent.querySelector('#kcal-chart-container').classList.add('active');
-            else if (chartType === 'protein') parent.querySelector('#protein-chart-container').classList.add('active');
-            else if (chartType === 'fat') parent.querySelector('#fat-chart-container').classList.add('active');
-            else if (chartType === 'carbs') parent.querySelector('#carbs-chart-container').classList.add('active');
-            else if (chartType === 'bju') parent.querySelector('#bju-chart-container').classList.add('active');
+            else if (chartType === 'kcal') document.getElementById('kcal-chart-container').classList.add('active');
+            else if (chartType === 'protein') document.getElementById('protein-chart-container').classList.add('active');
+            else if (chartType === 'fat') document.getElementById('fat-chart-container').classList.add('active');
+            else if (chartType === 'carbs') document.getElementById('carbs-chart-container').classList.add('active');
+            else if (chartType === 'bju') document.getElementById('bju-chart-container').classList.add('active');
         });
     });
 }
@@ -103,7 +103,6 @@ function setupModals() {
         'closeAddToBaseModal': 'addToBaseModal',
         'closeWeightModal': 'weightModal',
         'closeProductManagerBtn': 'productManagerModal',
-        'closeEditProductModal': 'editCustomProductModal',
         'closeCaloriesModal': 'editCaloriesModal',
         'closeProfileBtn': 'profileModal',
         'closeTemplatesBtn': 'templatesModal',
@@ -191,7 +190,6 @@ function setupProfile() {
         profileIcon.addEventListener('click', function() { 
             if (state.currentUser) {
                 document.getElementById('profileModal').style.display = 'flex';
-                updateWeightHistoryList();
             } else {
                 alert('Сначала войдите в аккаунт');
             }
@@ -245,34 +243,6 @@ function showSmartAdvice() {
     }
     var adviceOutput = document.getElementById('adviceOutput');
     if (adviceOutput) adviceOutput.innerHTML = text || 'Нет данных';
-}
-
-function updateWeightHistoryList() {
-    var container = document.getElementById('weightHistoryList');
-    if (!container) return;
-    container.innerHTML = '';
-    
-    var sortedWeights = [].concat(state.bodyWeightHistory).sort(function(a, b) { 
-        return new Date(b.date) - new Date(a.date); 
-    });
-    
-    sortedWeights.forEach(function(w) {
-        var div = document.createElement('div');
-        div.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:6px; border-bottom:1px solid #2a2f40;';
-        div.innerHTML = '<span>' + formatDateToDMY(w.date) + '</span><span>' + w.weight + ' кг</span><button class="round-delete" data-date="' + w.date + '">✕</button>';
-        container.appendChild(div);
-    });
-    
-    document.querySelectorAll('#weightHistoryList .round-delete').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            var d = btn.dataset.date;
-            state.bodyWeightHistory = state.bodyWeightHistory.filter(function(w) { return w.date !== d; });
-            updateWeightHistoryList(); 
-            updateWeightChart(); 
-            saveLocal(); 
-            syncToCloud();
-        });
-    });
 }
 
 function formatDateToDMY(d) { 
