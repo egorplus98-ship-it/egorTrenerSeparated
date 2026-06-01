@@ -1,4 +1,4 @@
-export const builtinProducts = {
+export var builtinProducts = {
     "рис": { protein: 2.7, fat: 0.3, carbs: 28, kcal: 130 },
     "гречка": { protein: 12.6, fat: 3.3, carbs: 62, kcal: 313 },
     "куриная грудка": { protein: 31, fat: 3.6, carbs: 0, kcal: 165 },
@@ -10,4 +10,4 @@ export const builtinProducts = {
     "макароны": { protein: 5, fat: 1, carbs: 30, kcal: 150 }
 };
 
-export const defaultExercises = ["Жим лёжа", "Присед", "Становая тяга", "Тяга штанги", "Жим стоя"];
+export var defaultExercises = ["Жим лёжа", "Присед", "Становая тяга", "Тяга штанги", "Жим стоя"];
