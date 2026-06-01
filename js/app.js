@@ -9,6 +9,7 @@ import { renderWorkoutHistory, renderFoodHistory, setupCaloriesEdit } from './mo
 
 window.showWeightModal = showWeightModal;
 window.updateFoodCharts = updateFoodCharts;
+window.renderMeals = renderMeals;
 
 export function renderAll() {
     renderExercises();
@@ -36,7 +37,7 @@ function updateWeightHistoryList() {
     
     sorted.forEach(function(w) {
         var div = document.createElement('div');
-        div.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:6px; border-bottom:1px solid #2a2f40;';
+        div.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:6px;border-bottom:1px solid #2a2f40;';
         div.innerHTML = '<span>' + formatDateToDMY(w.date) + '</span><span>' + w.weight + ' кг</span><button class="round-delete" data-date="' + w.date + '">✕</button>';
         container.appendChild(div);
     });
