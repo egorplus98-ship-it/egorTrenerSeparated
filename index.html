@@ -33,15 +33,16 @@
 
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: system-ui, -apple-system, sans-serif; background: #0a0c12; color: #eef2ff; padding-bottom: 80px; }
-        .container { max-width: 650px; margin: 0 auto; padding: 12px; }
-        .header-icons { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .bicep-icon { font-size: 42px; cursor: pointer; animation: flexBicep 2s infinite; }
-        .profile-icon, .sync-icon { background: #1e2332; width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 26px; cursor: pointer; }
-        @keyframes flexBicep { 0%,100%{transform:scale(1)} 50%{transform:scale(1.1)} }
+        body { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif; background: #0a0c12; color: #eef2ff; padding-bottom: 80px; }
+        .container { max-width: 650px; margin: 0 auto; padding: 12px; padding-top: env(safe-area-inset-top, 12px); }
+        .header-icons { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; margin-top: 8px; }
+        .bicep-icon { font-size: 42px; cursor: pointer; animation: flexBicep 2s ease-in-out infinite; }
+        .profile-icon, .sync-icon { background: #1e2332; width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 26px; cursor: pointer; transition: 0.2s; }
+        .profile-icon:hover, .sync-icon:hover { background: #ff7b2c; }
+        @keyframes flexBicep { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
         .tabs { position: fixed; bottom: 0; left: 0; right: 0; max-width: 650px; margin: 0 auto; display: flex; background: #11141f; border-top: 1px solid #2a2f3f; z-index: 100; padding: 10px 5px; gap: 5px; }
-        .tab-btn { flex: 1; background: none; border: none; color: #8c91a4; font-size: 13px; font-weight: 600; cursor: pointer; padding: 10px 0; border-radius: 30px; }
-        .tab-btn.active { color: #ff7b2c; background: rgba(255,123,44,0.1); }
+        .tab-btn { flex: 1; background: transparent; border: none; color: #8c91a4; font-size: 13px; font-weight: 600; cursor: pointer; padding: 10px 0; border-radius: 30px; transition: 0.2s; }
+        .tab-btn.active { color: #ff7b2c; background: rgba(255, 123, 44, 0.1); }
         .page { display: none; }
         .page.active-page { display: block; }
         .card { background: #141824; border-radius: 24px; padding: 16px; margin-bottom: 16px; border: 1px solid #242838; }
@@ -49,68 +50,110 @@
         h3 { font-size: 1rem; margin-bottom: 8px; }
         .input-row { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
         .date-input { flex: 2; background: #1e2332; border: 1px solid #2f3548; border-radius: 14px; padding: 12px; color: white; }
-        .small-btn { padding: 8px 16px; background: #ff7b2c; border: none; border-radius: 40px; font-weight: bold; color: #0a0c12; cursor: pointer; width: auto; }
+        .small-btn { width: auto; padding: 8px 16px; background: #ff7b2c; border: none; border-radius: 40px; font-weight: bold; color: #0a0c12; cursor: pointer; }
         button { background: #ff7b2c; border: none; padding: 12px; border-radius: 40px; font-weight: bold; color: #0a0c12; cursor: pointer; width: 100%; }
         button.secondary { background: #2a2f40; color: #ffd1b0; }
-        .dark-input, .dark-select { width: 100%; padding: 10px; background: #1e2332; border: 1px solid #2f3548; border-radius: 14px; color: white; }
-        textarea.dark-input { resize: vertical; }
+        .workout-table { max-height: 50vh; overflow-y: auto; }
+        .exercise-block { background: #1b1f2c; border-radius: 16px; margin-bottom: 12px; }
+        .exercise-header { background: #2a2f40; padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; border-radius: 16px 16px 0 0; }
+        .order-number { background: #ff7b2c; color: black; width: 28px; height: 28px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; margin-right: 8px; font-size: 12px; }
+        .exercise-sets { padding: 10px; }
+        .set-header { display: grid; grid-template-columns: 28px 70px 85px 70px 60px 32px; gap: 6px; font-size: 10px; color: #9ba1bc; margin-bottom: 4px; }
+        .set-row { display: grid; grid-template-columns: 28px 70px 85px 70px 60px 32px; gap: 6px; align-items: center; background: #1e2332; padding: 6px; border-radius: 10px; margin-bottom: 4px; }
+        .set-input, .weight-type-select { background: #2a2f40; border: none; padding: 6px 0; border-radius: 8px; color: white; text-align: center; font-size: 11px; width: 100%; }
+        .weight-display { background: #2a2f40; padding: 6px 0; border-radius: 8px; text-align: center; font-size: 11px; width: 100%; }
+        .weight-display.own-weight { color: #2ecc71; font-style: italic; }
+        .delete-set-btn { background: #ff5c5c; border: none; border-radius: 50%; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 12px; color: white; }
+        .food-item { background: #1e2332; padding: 12px; border-radius: 12px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+        .daily-summary { background: #2a2f40; border-radius: 16px; padding: 12px; margin-bottom: 16px; }
+        .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px; }
+        .summary-item { background: #1e2332; padding: 10px; border-radius: 12px; text-align: center; }
+        .summary-value { font-size: 18px; font-weight: bold; }
+        .summary-label { font-size: 10px; color: #9ba1bc; }
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.96); z-index: 200; align-items: center; justify-content: center; overflow-y: auto; }
         .modal-window { background: #141824; border-radius: 28px; padding: 20px; width: 90%; max-width: 380px; max-height: 85vh; overflow-y: auto; border: 1px solid #ff7b2c; }
+        .profile-field { margin-bottom: 14px; }
+        .profile-field label { font-size: 12px; display: block; margin-bottom: 4px; color: #9ba1bc; }
+        .profile-field input, .profile-field select, .dark-input { width: 100%; padding: 10px; background: #1e2332; border: 1px solid #2f3548; border-radius: 14px; color: white; }
+        textarea.dark-input { resize: vertical; }
+        .exercise-list-compact { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+        .compact-exercise-item { display: flex; justify-content: space-between; align-items: center; background: #1e2332; padding: 10px 14px; border-radius: 14px; }
+        .small-plus { background: #ff7b2c; border: none; border-radius: 30px; padding: 4px 12px; font-weight: bold; cursor: pointer; font-size: 12px; width: auto; }
+        .round-delete { background: #ff5c5c; border: none; border-radius: 50%; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; color: white; }
+        .round-edit { background: #2ecc71; border: none; border-radius: 50%; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; color: black; }
+        .action-buttons { display: flex; gap: 6px; align-items: center; }
+        .chart-group-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+        .chart-group-btn { background: #2a2f40; border: none; padding: 8px 16px; border-radius: 30px; color: #ffd1b0; cursor: pointer; font-weight: bold; }
+        .chart-group-btn.active { background: #ff7b2c; color: black; }
+        .chart-sub-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+        .chart-tab-btn { background: #2a2f40; color: #ffd1b0; width: auto; padding: 6px 12px; font-size: 12px; border-radius: 30px; cursor: pointer; }
+        .chart-tab-btn.active { background: #ff7b2c; color: black; }
+        .chart-container { display: none; }
+        .chart-container.active { display: block; }
+        canvas { max-height: 200px; width: 100%; }
+        .history-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+        .history-tab-btn { background: #2a2f40; border: none; padding: 8px 16px; border-radius: 30px; color: #ffd1b0; cursor: pointer; }
+        .history-tab-btn.active { background: #ff7b2c; color: black; }
+        .history-content { display: none; }
+        .history-content.active { display: block; }
+        .history-day { background: #1b1f2c; border-radius: 16px; margin-bottom: 16px; overflow: hidden; }
+        .history-day-header { background: #2a2f40; padding: 12px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; cursor: pointer; }
+        .history-exercise { padding: 12px; border-bottom: 1px solid #2a2f40; }
+        .history-sets-list { margin-top: 6px; padding-left: 12px; }
+        .history-set-item { font-size: 13px; margin-bottom: 4px; color: #c4c9e0; }
+        .login-card { text-align: center; }
+        .login-card input { width: 100%; margin-bottom: 12px; background: #1e2332; border: 1px solid #2f3548; border-radius: 14px; padding: 12px; color: white; }
+        .product-item { background: #1e2332; padding: 10px; border-radius: 12px; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center; }
+        .product-name { font-weight: bold; font-size: 14px; }
+        .product-nutrition { font-size: 11px; color: #9ba1bc; margin-top: 2px; }
+        .dark-select { background: #1e2332; border: 1px solid #2f3548; border-radius: 14px; padding: 10px; color: white; width: 100%; }
+        .workout-history-content { display: none; margin-top: 8px; }
+        .workout-history-content.active { display: block; }
+        .products-tabs { display: flex; gap: 8px; margin-bottom: 16px; }
+        .products-tab-btn { background: #2a2f40; border: none; padding: 8px 16px; border-radius: 30px; color: #ffd1b0; cursor: pointer; flex: 1; text-align: center; }
+        .products-tab-btn.active { background: #ff7b2c; color: black; }
+        .products-list { max-height: 400px; overflow-y: auto; }
+        .modal-buttons { display: flex; gap: 12px; margin-top: 16px; }
+        .modal-buttons button { flex: 1; margin-top: 0; }
+        .history-food-day { background: #1b1f2c; border-radius: 16px; margin-bottom: 16px; overflow: hidden; }
+        .history-food-header { background: #2a2f40; padding: 12px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; cursor: pointer; }
+        .food-history-content { display: none; margin-top: 0; }
+        .food-history-content.active { display: block; }
         .meal-section { background: #1b1f2c; border-radius: 16px; padding: 12px; margin-bottom: 12px; }
         .meal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-weight: bold; }
         .meal-kcal { background: #2a2f40; padding: 4px 10px; border-radius: 20px; font-size: 12px; color: #ff7b2c; }
         .meal-list { margin-bottom: 8px; }
         .meal-item { display: flex; justify-content: space-between; align-items: center; background: #1e2332; padding: 8px; border-radius: 8px; margin-bottom: 4px; font-size: 13px; }
         .add-to-meal-btn { display: block; width: 100%; text-align: center; }
-        .small-plus { background: #ff7b2c; border: none; border-radius: 30px; padding: 4px 12px; font-weight: bold; cursor: pointer; font-size: 12px; width: auto; }
-        .round-delete { background: #ff5c5c; border: none; border-radius: 50%; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; font-size: 14px; color: white; }
         .progress-bar { width: 100%; height: 4px; background: #2a2f40; border-radius: 2px; margin-top: 4px; overflow: hidden; }
         .progress-fill { height: 100%; background: #ff7b2c; border-radius: 2px; transition: width 0.3s; }
         .progress-fill.protein { background: #2ecc71; }
         .progress-fill.fat { background: #f1c40f; }
         .progress-fill.carbs { background: #3498db; }
         .rest-timer-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.9); z-index: 150; display: flex; align-items: center; justify-content: center; flex-direction: column; }
-        .rest-timer-circle { width: 200px; height: 200px; border-radius: 50%; border: 6px solid #ff7b2c; display: flex; align-items: center; justify-content: center; font-size: 64px; font-weight: bold; color: #ff7b2c; animation: pulse 1s infinite; }
-        @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.05)} }
-        .exercise-block { background: #1b1f2c; border-radius: 16px; margin-bottom: 12px; }
-        .exercise-header { background: #2a2f40; padding: 10px 12px; display: flex; justify-content: space-between; border-radius: 16px 16px 0 0; }
-        .order-number { background: #ff7b2c; color: black; width: 28px; height: 28px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; cursor: pointer; font-size: 12px; }
-        .exercise-sets { padding: 10px; }
-        .set-row { display: grid; grid-template-columns: 28px 70px 85px 70px 60px 32px; gap: 6px; align-items: center; background: #1e2332; padding: 6px; border-radius: 10px; margin-bottom: 4px; }
-        .set-input, .weight-type-select { background: #2a2f40; border: none; padding: 6px 0; border-radius: 8px; color: white; text-align: center; font-size: 11px; width: 100%; }
-        .delete-set-btn { background: #ff5c5c; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-size: 12px; color: white; }
-        .chart-group-tabs, .chart-sub-tabs, .history-tabs { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
-        .chart-group-btn, .chart-tab-btn, .history-tab-btn { background: #2a2f40; border: none; padding: 8px 16px; border-radius: 30px; color: #ffd1b0; cursor: pointer; font-weight: bold; }
-        .chart-group-btn.active, .chart-tab-btn.active, .history-tab-btn.active { background: #ff7b2c; color: black; }
-        .chart-container { display: none; }
-        .chart-container.active { display: block; }
-        .history-content { display: none; }
-        .history-content.active { display: block; }
-        .history-day { background: #1b1f2c; border-radius: 16px; margin-bottom: 16px; overflow: hidden; }
-        .history-day-header { background: #2a2f40; padding: 12px; display: flex; justify-content: space-between; cursor: pointer; }
-        .history-exercise { padding: 12px; border-bottom: 1px solid #2a2f40; }
-        .action-buttons { display: flex; gap: 6px; align-items: center; }
-        .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px; }
-        .summary-item { background: #1e2332; padding: 10px; border-radius: 12px; text-align: center; }
-        .summary-value { font-size: 18px; font-weight: bold; }
-        .summary-label { font-size: 10px; color: #9ba1bc; }
-        canvas { max-height: 200px; width: 100%; }
+        .rest-timer-circle { width: 200px; height: 200px; border-radius: 50%; border: 6px solid #ff7b2c; display: flex; align-items: center; justify-content: center; font-size: 64px; font-weight: bold; color: #ff7b2c; animation: pulse 1s ease-in-out infinite; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        @media (max-width: 500px) {
+            .set-header { grid-template-columns: 25px 60px 75px 60px 55px 28px; gap: 4px; }
+            .set-row { grid-template-columns: 25px 60px 75px 60px 55px 28px; gap: 4px; }
+        }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="header-icons">
         <div class="bicep-icon" id="bicepIcon">💪</div>
-        <div style="display:flex;gap:12px;">
+        <div style="display: flex; gap: 12px;">
             <div class="sync-icon" id="syncCloudBtn">☁️</div>
             <div class="profile-icon" id="profileIcon">👤</div>
         </div>
     </div>
 
     <div id="login-page" class="page active-page">
-        <div class="card"><h2>🔐 Вход</h2>
-            <input type="email" id="loginEmail" placeholder="Email" value="egorplus98@gmail.com"><br><br>
-            <input type="password" id="loginPassword" placeholder="Пароль" value="egorplus2003"><br><br>
+        <div class="card login-card">
+            <h2>🔐 Вход</h2>
+            <input type="email" id="loginEmail" placeholder="Email" value="egorplus98@gmail.com">
+            <input type="password" id="loginPassword" placeholder="Пароль" value="egorplus2003">
             <button id="loginBtn">Войти</button>
         </div>
     </div>
@@ -123,19 +166,28 @@
                     <button id="showExercisePickerBtn" class="small-btn">➕ Упр.</button>
                     <button id="showTemplatesBtn" class="small-btn secondary">📋</button>
                 </div>
-                <div id="exercisesContainer"></div>
+                <div id="exercisesContainer" class="workout-table"></div>
                 <div style="margin-top:12px;">
                     <div class="input-row">
-                        <label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" id="enableRestTimer"> Таймер</label>
-                        <select id="restTimerDuration" class="dark-select" style="width:auto;"><option value="60">60с</option><option value="90" selected>90с</option><option value="120">120с</option></select>
+                        <label style="display:flex;align-items:center;gap:8px;">
+                            <input type="checkbox" id="enableRestTimer"> Таймер отдыха
+                        </label>
+                        <select id="restTimerDuration" class="dark-select" style="width:auto;">
+                            <option value="60">60 сек</option>
+                            <option value="90" selected>90 сек</option>
+                            <option value="120">120 сек</option>
+                            <option value="180">180 сек</option>
+                        </select>
                         <span id="restTimerDisplay" style="display:none;color:#ff7b2c;font-weight:bold;">01:30</span>
                     </div>
-                    <label>😊 Самочувствие (1-10)</label>
-                    <input type="number" id="workoutFeeling" class="dark-input" min="1" max="10" value="7" style="width:80px;">
+                    <div class="input-row">
+                        <label>😊 Самочувствие (1-10)</label>
+                        <input type="number" id="workoutFeeling" class="dark-input" min="1" max="10" value="7" style="width:80px;">
+                    </div>
                     <label>📝 Заметки</label>
-                    <textarea id="workoutNotes" class="dark-input" placeholder="Как тренировка?" style="height:60px;"></textarea>
-                    <label>🔥 Ккал</label>
-                    <input type="text" id="caloriesInput" class="dark-input" placeholder="1000">
+                    <textarea id="workoutNotes" class="dark-input" placeholder="Как прошла тренировка?" style="height:60px;margin-top:4px;"></textarea>
+                    <label style="margin-top:8px;">🔥 Ккал (просто число, например 1000)</label>
+                    <input type="text" id="caloriesInput" placeholder="1000" class="dark-input" style="margin-top:4px;">
                     <button id="saveAllWorkoutsBtn" style="margin-top:12px;">💾 Сохранить</button>
                 </div>
             </div>
@@ -144,78 +196,154 @@
         <div id="food-page" class="page">
             <div class="card">
                 <div class="input-row"><input type="date" id="foodDate" class="date-input"></div>
-                <div class="daily-summary" style="background:#2a2f40;border-radius:16px;padding:12px;margin-bottom:16px;">
-                    <div style="display:flex;justify-content:space-between;"><span>🎯 Цели</span><button id="editGoalsBtn" class="small-btn secondary" style="width:auto;">⚙️</button></div>
-                    <div class="summary-grid">
-                        <div class="summary-item"><div id="goalKcal">0/0</div><div class="summary-label">Ккал</div><div class="progress-bar"><div class="progress-fill" id="kcalProgress" style="width:0%"></div></div></div>
-                        <div class="summary-item"><div id="goalProtein">0/0</div><div class="summary-label">Белки</div><div class="progress-bar"><div class="progress-fill protein" id="proteinProgress" style="width:0%"></div></div></div>
-                        <div class="summary-item"><div id="goalFat">0/0</div><div class="summary-label">Жиры</div><div class="progress-bar"><div class="progress-fill fat" id="fatProgress" style="width:0%"></div></div></div>
-                        <div class="summary-item"><div id="goalCarbs">0/0</div><div class="summary-label">Углеводы</div><div class="progress-bar"><div class="progress-fill carbs" id="carbsProgress" style="width:0%"></div></div></div>
+                
+                <div id="nutritionGoals" class="daily-summary">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span>🎯 Цели на день</span>
+                        <button id="editGoalsBtn" class="small-btn secondary" style="width:auto;">⚙️</button>
+                    </div>
+                    <div class="summary-grid" style="margin-top:8px;">
+                        <div class="summary-item">
+                            <div class="summary-value" id="goalKcal">0/0</div>
+                            <div class="summary-label">Ккал</div>
+                            <div class="progress-bar"><div class="progress-fill" id="kcalProgress" style="width:0%"></div></div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-value" id="goalProtein">0/0</div>
+                            <div class="summary-label">Белки</div>
+                            <div class="progress-bar"><div class="progress-fill protein" id="proteinProgress" style="width:0%"></div></div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-value" id="goalFat">0/0</div>
+                            <div class="summary-label">Жиры</div>
+                            <div class="progress-bar"><div class="progress-fill fat" id="fatProgress" style="width:0%"></div></div>
+                        </div>
+                        <div class="summary-item">
+                            <div class="summary-value" id="goalCarbs">0/0</div>
+                            <div class="summary-label">Углеводы</div>
+                            <div class="progress-bar"><div class="progress-fill carbs" id="carbsProgress" style="width:0%"></div></div>
+                        </div>
                     </div>
                 </div>
+                
                 <h3>🍽 Приёмы пищи</h3>
-                <div class="meal-section"><div class="meal-header"><span>🌅 Завтрак</span><span class="meal-kcal" id="breakfastKcal">0</span></div><div id="breakfastList" class="meal-list"></div><button class="add-to-meal-btn small-plus" data-meal="breakfast">+</button></div>
-                <div class="meal-section"><div class="meal-header"><span>☀️ Обед</span><span class="meal-kcal" id="lunchKcal">0</span></div><div id="lunchList" class="meal-list"></div><button class="add-to-meal-btn small-plus" data-meal="lunch">+</button></div>
-                <div class="meal-section"><div class="meal-header"><span>🌙 Ужин</span><span class="meal-kcal" id="dinnerKcal">0</span></div><div id="dinnerList" class="meal-list"></div><button class="add-to-meal-btn small-plus" data-meal="dinner">+</button></div>
-                <div class="meal-section"><div class="meal-header"><span>🍎 Перекус</span><span class="meal-kcal" id="snackKcal">0</span></div><div id="snackList" class="meal-list"></div><button class="add-to-meal-btn small-plus" data-meal="snack">+</button></div>
-                <div class="input-row"><input type="text" id="productSearchInput" class="dark-input" placeholder="Поиск продукта..." style="flex:1;"><button id="searchProductBtn" class="small-btn">🔍</button></div>
+                <div class="meal-section">
+                    <div class="meal-header"><span>🌅 Завтрак</span><span class="meal-kcal" id="breakfastKcal">0 ккал</span></div>
+                    <div id="breakfastList" class="meal-list"></div>
+                    <button class="add-to-meal-btn small-plus" data-meal="breakfast">+</button>
+                </div>
+                <div class="meal-section">
+                    <div class="meal-header"><span>☀️ Обед</span><span class="meal-kcal" id="lunchKcal">0 ккал</span></div>
+                    <div id="lunchList" class="meal-list"></div>
+                    <button class="add-to-meal-btn small-plus" data-meal="lunch">+</button>
+                </div>
+                <div class="meal-section">
+                    <div class="meal-header"><span>🌙 Ужин</span><span class="meal-kcal" id="dinnerKcal">0 ккал</span></div>
+                    <div id="dinnerList" class="meal-list"></div>
+                    <button class="add-to-meal-btn small-plus" data-meal="dinner">+</button>
+                </div>
+                <div class="meal-section">
+                    <div class="meal-header"><span>🍎 Перекус</span><span class="meal-kcal" id="snackKcal">0 ккал</span></div>
+                    <div id="snackList" class="meal-list"></div>
+                    <button class="add-to-meal-btn small-plus" data-meal="snack">+</button>
+                </div>
+                
+                <div class="input-row" style="margin-top:12px;">
+                    <input type="text" id="productSearchInput" placeholder="Поиск продукта..." class="dark-input" style="flex:1;">
+                    <button id="searchProductBtn" class="small-btn">🔍</button>
+                </div>
                 <div id="searchResults"></div>
-                <div style="display:flex;gap:8px;margin-top:8px;">
-                    <button id="addManualFoodBtn" class="secondary" style="flex:1;">➕ Вручную</button>
-                    <button id="addToBaseBtn" class="secondary" style="flex:1;">📦 В базу</button>
-                    <button id="manageProductsBtn" class="secondary" style="flex:1;">📋 База</button>
+                <div style="display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;">
+                    <button id="addManualFoodBtn" class="secondary" style="flex:1;">➕ Добавить вручную</button>
+                    <button id="addToBaseBtn" class="secondary" style="flex:1;">📦 Добавить в Базу</button>
+                    <button id="manageProductsBtn" class="secondary" style="flex:1;">📋 База данных продуктов</button>
                 </div>
             </div>
         </div>
 
-        <div id="history-page" class="page"><div class="card"><h2>📜 История</h2><div class="history-tabs"><button class="history-tab-btn active" data-history="workout">💪</button><button class="history-tab-btn" data-history="food">🍽</button></div><div id="workout-history-container" class="history-content active"></div><div id="food-history-container" class="history-content"></div></div></div>
+        <div id="history-page" class="page">
+            <div class="card">
+                <h2>📜 История</h2>
+                <div class="history-tabs">
+                    <button class="history-tab-btn active" data-history="workout">💪 Тренировки</button>
+                    <button class="history-tab-btn" data-history="food">🍽 Питание</button>
+                </div>
+                <div id="workout-history-container" class="history-content active"></div>
+                <div id="food-history-container" class="history-content"></div>
+            </div>
+        </div>
 
-        <div id="stats-page" class="page"><div class="card"><div class="chart-group-tabs"><button class="chart-group-btn active" data-group="train">💪</button><button class="chart-group-btn" data-group="food">🍽</button></div>
-        <div id="train-charts"><div class="chart-sub-tabs"><button class="chart-tab-btn active" data-chart="progress">📈 1ПМ</button><button class="chart-tab-btn" data-chart="max">🏆 Макс</button><button class="chart-tab-btn" data-chart="tonnage">⚖️ Тоннаж</button></div>
-        <div id="progress-chart-container" class="chart-container active"><select id="chartExerciseSelect" class="dark-select"></select><canvas id="progressChart" height="160"></canvas></div>
-        <div id="max-chart-container" class="chart-container"><select id="maxChartExerciseSelect" class="dark-select"></select><canvas id="maxChart" height="160"></canvas></div>
-        <div id="tonnage-chart-container" class="chart-container"><select id="tonnageChartExerciseSelect" class="dark-select"></select><canvas id="tonnageChart" height="160"></canvas></div></div>
-        <div id="food-charts" style="display:none;"><div class="chart-sub-tabs"><button class="chart-tab-btn active" data-chart="kcal">🔥</button><button class="chart-tab-btn" data-chart="protein">🥩</button><button class="chart-tab-btn" data-chart="fat">🍗</button><button class="chart-tab-btn" data-chart="carbs">🍚</button><button class="chart-tab-btn" data-chart="bju">📊</button></div>
-        <div id="kcal-chart-container" class="chart-container active"><canvas id="kcalChart" height="160"></canvas></div>
-        <div id="protein-chart-container" class="chart-container"><canvas id="proteinChart" height="160"></canvas></div>
-        <div id="fat-chart-container" class="chart-container"><canvas id="fatChart" height="160"></canvas></div>
-        <div id="carbs-chart-container" class="chart-container"><canvas id="carbsChart" height="160"></canvas></div>
-        <div id="bju-chart-container" class="chart-container"><canvas id="bjuChart" height="200"></canvas></div></div></div>
-        <div class="card"><h2>⚖️ Вес</h2><canvas id="weightChart" height="160"></canvas></div></div>
+        <div id="stats-page" class="page">
+            <div class="card">
+                <div class="chart-group-tabs">
+                    <button class="chart-group-btn active" data-group="train">💪 Тренировка</button>
+                    <button class="chart-group-btn" data-group="food">🍽 Питание</button>
+                </div>
+                <div id="train-charts" class="chart-group active">
+                    <div class="chart-sub-tabs">
+                        <button class="chart-tab-btn active" data-chart="progress">📈 Прогресс 1ПМ</button>
+                        <button class="chart-tab-btn" data-chart="max">🏆 Макс. вес</button>
+                        <button class="chart-tab-btn" data-chart="tonnage">⚖️ Тоннаж</button>
+                    </div>
+                    <div id="progress-chart-container" class="chart-container active">
+                        <select id="chartExerciseSelect" class="dark-select"></select>
+                        <canvas id="progressChart" height="160"></canvas>
+                    </div>
+                    <div id="max-chart-container" class="chart-container">
+                        <select id="maxChartExerciseSelect" class="dark-select"></select>
+                        <canvas id="maxChart" height="160"></canvas>
+                    </div>
+                    <div id="tonnage-chart-container" class="chart-container">
+                        <select id="tonnageChartExerciseSelect" class="dark-select"></select>
+                        <canvas id="tonnageChart" height="160"></canvas>
+                    </div>
+                </div>
+                <div id="food-charts" class="chart-group" style="display:none;">
+                    <div class="chart-sub-tabs">
+                        <button class="chart-tab-btn active" data-chart="kcal">🔥 Калории</button>
+                        <button class="chart-tab-btn" data-chart="protein">🥩 Белки</button>
+                        <button class="chart-tab-btn" data-chart="fat">🍗 Жиры</button>
+                        <button class="chart-tab-btn" data-chart="carbs">🍚 Углеводы</button>
+                        <button class="chart-tab-btn" data-chart="bju">📊 БЖУ</button>
+                    </div>
+                    <div id="kcal-chart-container" class="chart-container active"><canvas id="kcalChart" height="160"></canvas></div>
+                    <div id="protein-chart-container" class="chart-container"><canvas id="proteinChart" height="160"></canvas></div>
+                    <div id="fat-chart-container" class="chart-container"><canvas id="fatChart" height="160"></canvas></div>
+                    <div id="carbs-chart-container" class="chart-container"><canvas id="carbsChart" height="160"></canvas></div>
+                    <div id="bju-chart-container" class="chart-container"><canvas id="bjuChart" height="200"></canvas></div>
+                </div>
+            </div>
+            <div class="card">
+                <h2>⚖️ Вес тела</h2>
+                <canvas id="weightChart" height="160"></canvas>
+            </div>
+        </div>
 
-        <div id="ai-page" class="page"><div class="card"><button id="copyJsonBtn">📋 Копировать JSON</button><button id="importJsonBtn" class="secondary" style="margin-top:8px;">📂 Импорт</button><input type="file" id="importFileInput" accept=".json" style="display:none;"></div><div class="card"><button id="smartAdviceBtn">✨ Рекомендация</button><div id="adviceOutput" style="background:#0a0e16;border-radius:16px;padding:14px;margin-top:12px;"></div></div></div>
+        <div id="ai-page" class="page">
+            <div class="card">
+                <button id="copyJsonBtn">📋 Копировать JSON</button>
+                <button id="importJsonBtn" class="secondary" style="margin-top:8px;">📂 Импорт JSON</button>
+                <input type="file" id="importFileInput" accept=".json" style="display:none;">
+            </div>
+            <div class="card">
+                <button id="smartAdviceBtn">✨ Рекомендация</button>
+                <div id="adviceOutput" style="background:#0a0e16; border-radius: 16px; padding: 14px; margin-top: 12px;"></div>
+            </div>
+        </div>
     </div>
 </div>
 
 <div class="tabs" id="mainTabs">
-    <button class="tab-btn active" data-tab="workout">💪</button>
-    <button class="tab-btn" data-tab="food">🍽</button>
-    <button class="tab-btn" data-tab="history">📜</button>
-    <button class="tab-btn" data-tab="stats">📊</button>
-    <button class="tab-btn" data-tab="ai">🧠</button>
+    <button class="tab-btn active" data-tab="workout">💪 Тренировка</button>
+    <button class="tab-btn" data-tab="food">🍽 Питание</button>
+    <button class="tab-btn" data-tab="history">📜 История</button>
+    <button class="tab-btn" data-tab="stats">📊 Графики</button>
+    <button class="tab-btn" data-tab="ai">🧠 ИИ</button>
 </div>
 
-<div id="profileModal" class="modal-overlay"><div class="modal-window"><h2>Профиль</h2><button id="closeProfileBtn" class="secondary">Закрыть</button></div></div>
-<div id="exercisePickerModal" class="modal-overlay"><div class="modal-window"><h3>➕ Упражнение</h3><div id="exercisePickerList"></div><button id="closePickerBtn" class="secondary">Отмена</button></div></div>
-<div id="templatesModal" class="modal-overlay"><div class="modal-window"><h3>📋 Шаблоны</h3><div id="templatesList"></div><div class="input-row"><input type="text" id="newTemplateName" class="dark-input" placeholder="Название" style="flex:1;"><button id="saveAsTemplateBtn" class="small-btn">💾</button></div><button id="closeTemplatesBtn" class="secondary">Закрыть</button></div></div>
-<div id="goalsModal" class="modal-overlay"><div class="modal-window"><h3>🎯 Цели</h3><div><label>Ккал</label><input type="number" id="goalKcalInput" class="dark-input" value="2500"></div><div><label>Белки</label><input type="number" id="goalProteinInput" class="dark-input" value="150"></div><div><label>Жиры</label><input type="number" id="goalFatInput" class="dark-input" value="70"></div><div><label>Углеводы</label><input type="number" id="goalCarbsInput" class="dark-input" value="300"></div><button id="saveGoalsBtn">Сохранить</button><button id="closeGoalsBtn" class="secondary">Отмена</button></div></div>
-<div id="weightModal" class="modal-overlay"><div class="modal-window"><h3>⚖️ Вес</h3><p id="weightProductName"></p><input type="number" id="selectedWeight" class="dark-input" value="100"><button id="confirmWeightBtn">Добавить</button><button id="closeWeightModal" class="secondary">Отмена</button></div></div>
-<div id="orderModal" class="modal-overlay"><div class="modal-window"><h3>🔢 Порядок</h3><input type="number" id="orderNumberInput" class="dark-input"><button id="confirmOrderBtn">Ок</button><button id="closeOrderBtn" class="secondary">Отмена</button></div></div>
-<div id="addFoodModal" class="modal-overlay"><div class="modal-window"><h3>➕ Еда</h3><input type="text" id="manualFoodName" class="dark-input" placeholder="Название"><input type="number" id="manualFoodWeight" class="dark-input" value="100"><button id="confirmAddFoodBtn">Добавить</button><button id="closeAddFoodModal" class="secondary">Отмена</button></div></div>
-<div id="addToBaseModal" class="modal-overlay"><div class="modal-window"><h3>📦 В базу</h3><input type="text" id="baseProductName" class="dark-input" placeholder="Название"><button id="confirmAddToBaseBtn">Добавить</button><button id="closeAddToBaseModal" class="secondary">Отмена</button></div></div>
-<div id="productManagerModal" class="modal-overlay"><div class="modal-window"><h3>📋 База</h3><div id="builtin-products-container"></div><button id="closeProductManagerBtn" class="secondary">Закрыть</button></div></div>
-<div id="editCaloriesModal" class="modal-overlay"><div class="modal-window"><h3>✏️ Ккал</h3><input type="text" id="editCaloriesInput" class="dark-input"><button id="saveCaloriesBtn">Ок</button><button id="closeCaloriesModal" class="secondary">Отмена</button></div></div>
-
-<script type="module" src="./js/config.js"></script>
-<script type="module" src="./js/utils/constants.js"></script>
-<script type="module" src="./js/utils/helpers.js"></script>
-<script type="module" src="./js/db.js"></script>
-<script type="module" src="./js/auth.js"></script>
-<script type="module" src="./js/modules/ui.js"></script>
-<script type="module" src="./js/modules/workouts.js"></script>
-<script type="module" src="./js/modules/nutrition.js"></script>
-<script type="module" src="./js/modules/charts.js"></script>
-<script type="module" src="./js/modules/history.js"></script>
-<script type="module" src="./js/app.js"></script>
-</body>
-</html>
+<!-- Модальные окна -->
+<div id="profileModal" class="modal-overlay"><div class="modal-window"><h2>Мои данные</h2><div class="profile-field"><label>Рост (см)</label><input type="number" id="userHeight" class="dark-input" placeholder="175"></div><div class="profile-field"><label>Вес (кг)</label><input type="number" id="userWeight" class="dark-input" placeholder="75"></div><div class="profile-field"><label>Пол</label><select id="userGender" class="dark-select"><option>Мужской</option><option>Женский</option></select></div><div class="profile-field"><label>Возраст</label><input type="number" id="userAge" class="dark-input" placeholder="25"></div><h3>📋 Список упражнений</h3><div id="exerciseManageList" class="exercise-list-compact"></div><div class="input-row"><input type="text" id="newExerciseNameInput" placeholder="Новое упражнение" class="dark-input" style="flex:1;"><button id="addExerciseFromModalBtn" class="small-btn">➕</button></div><h3>⚖️ Вес тела</h3><div class="input-row"><input type="date" id="weightDateInput" class="date-input"><input type="number" id="weightValueInput" placeholder="кг" class="dark-input" style="flex:1;"><button id="addWeightBtn" class="small-btn">+</button></div><div id="weightHistoryList"></div><button id="closeProfileBtn" class="secondary">Закрыть</button></div></div>
+<div id="exercisePickerModal" class="modal-overlay"><div class="modal-window"><h3>➕ Выбрать упражнение</h3><div id="exercisePickerList" class="exercise-list-compact"></div><button id="closePickerBtn" class="secondary">Отмена</button></div></div>
+<div id="orderModal" class="modal-overlay"><div class="modal-window"><h3>🔢 Порядок</h3><p id="orderExerciseName"></p><div class="input-row"><input type="number" id="orderNumberInput" placeholder="Номер" class="dark-input"><button id="confirmOrderBtn">Переместить</button></div><button id="closeOrderBtn" class="secondary">Отмена</button></div></div>
+<div id="addFoodModal" class="modal-overlay"><div class="modal-window"><h3>➕ Добавить продукт в еду</h3><div class="profile-field"><label>Продукт</label><input type="text" id="manualFoodName" class="dark-input"></div><div class="profile-field"><label>Вес (г)</label><input type="number" id="manualFoodWeight" class="dark-input" value="100"></div><div class="profile-field"><label>Белки (на 100г)</label><input type="number" id="manualFoodProtein" class="dark-input"></div><div class="profile-field"><label>Жиры (на 100г)</label><input type="number" id="manualFoodFat" class="dark-input"></div><div class="profile-field"><label>Углеводы (на 100г)</label><input type="number" id="manualFoodCarbs" class="dark-input"></div><div class="profile-field"><label>Ккал (на 100г)</label><input type="number" id="manualFoodKcal" class="dark-input"></div><div class="modal-buttons"><button id="confirmAddFoodBtn">Добавить</button><button id="closeAddFoodModal" class="secondary">Отмена</button></div></div></div>
+<div id="addToBaseModal" class="modal-overlay"><div class="modal-window"><h3>📦 Добавить в базу продуктов</h3><div class="profile-field"><label>Название</label><input type="text" id="baseProductName" class="dark-input"></div><div class="profile-field"><label>Белки (на 100г)</label><input type="number" id="baseProductProtein" class="dark-input"></div><div class="profile-field"><label>Жиры (на 100г)</label><input type="number" id="baseProductFat" class="dark-input"></div><div class="profile-field"><label>Углевод
