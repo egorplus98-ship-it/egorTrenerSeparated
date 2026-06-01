@@ -1,5 +1,3 @@
-// js/app.js
-
 import { state, loadLocal, saveLocal, syncToCloud } from './db.js';
 import { setupAuth } from './auth.js';
 import { getToday } from './utils/helpers.js';
@@ -32,11 +30,11 @@ function updateWeightHistoryList() {
     if (!container) return;
     container.innerHTML = '';
     
-    var sortedWeights = [].concat(state.bodyWeightHistory).sort(function(a, b) { 
+    var sorted = [].concat(state.bodyWeightHistory).sort(function(a, b) { 
         return new Date(b.date) - new Date(a.date); 
     });
     
-    sortedWeights.forEach(function(w) {
+    sorted.forEach(function(w) {
         var div = document.createElement('div');
         div.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:6px; border-bottom:1px solid #2a2f40;';
         div.innerHTML = '<span>' + formatDateToDMY(w.date) + '</span><span>' + w.weight + ' кг</span><button class="round-delete" data-date="' + w.date + '">✕</button>';
